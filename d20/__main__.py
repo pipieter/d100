@@ -1,7 +1,7 @@
 import os
 import time
 
-from d20 import roll, distribution
+from d20 import distribution, roll
 
 try:
     import readline  # type: ignore
