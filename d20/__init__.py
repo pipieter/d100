@@ -1,5 +1,7 @@
 import os
 
+
+from .distribution import DistributionBuilder, Distribution
 from . import diceast as ast
 from .enums import *
 from .errors import *
@@ -10,6 +12,7 @@ from .roll.stringifier import Stringifier
 _grammar_path = os.path.join(os.path.dirname(__file__), "grammar.lark")
 _parser = ast.Parser(_grammar_path)
 _roller = Roller(random_impl)
+_distribution_builder = DistributionBuilder()
 
 
 def parse(expr: str | ast.Expression) -> ast.Expression:
@@ -27,3 +30,9 @@ def roll(
 
 def seed(s: int | float | str | bytes | bytearray | None = None) -> None:
     _roller.seed(s)
+
+
+def distribution(expr: str | ast.Expression) -> Distribution:
+    tree = parse(expr)
+    roll(tree)  # Roll the expression once to see if it works
+    return _distribution_builder.build(tree)
