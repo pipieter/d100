@@ -4,15 +4,14 @@ ConvolutionDistributionBuilder and DiscreteDistributionBuilder, have the same
 end distributions.
 """
 
-from . import approx
-
-import d20
 import pytest
 
+import d20
 from d20.distribution.calculate import (
     ConvolutionDistributionBuilder,
     DiscreteDistributionBuilder,
 )
+from . import approx
 
 
 def operator(op: str, sel: tuple[str | None, int]):

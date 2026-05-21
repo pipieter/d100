@@ -1,8 +1,7 @@
 import os
 
-
-from .distribution import DistributionBuilder, Distribution
 from . import diceast as ast
+from .distribution import Distribution, DistributionBuilder
 from .enums import *
 from .errors import *
 from .rand import random_impl

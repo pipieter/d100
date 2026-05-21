@@ -6,8 +6,8 @@ from collections.abc import Callable
 import numpy as np
 
 from .distribution import Distribution
-from ..errors import RollError
 from .. import diceast as ast
+from ..errors import RollError
 
 
 class AbstractDistributionBuilder(abc.ABC):
@@ -314,7 +314,8 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         for selector in selectors:
             if self._creates_infinite_rr_loop(self._count, self._sides, selector):
                 raise RollError(
-                    f"Selector {str(selector)} will result in an infinite rr reroll loop for {self._count}d{self._sides}!"
+                    f"Selector {str(selector)} will result in an infinite rr reroll loop for"
+                    f" {self._count}d{self._sides}!"
                 )
 
             # In order to calculate the re-roll odds, we first find all the values that would be re-rolled,
@@ -692,7 +693,8 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         for selector in selectors:
             if self._creates_infinite_rr_loop(self._count, self._sides, selector):
                 raise RollError(
-                    f"Selector {str(selector)} will result in an infinite rr reroll loop for {self._count}d{self._sides}!"
+                    f"Selector {str(selector)} will result in an infinite rr reroll loop for"
+                    f" {self._count}d{self._sides}!"
                 )
 
             new_dist = defaultdict[DiscreteKey, float](float)

@@ -1,9 +1,8 @@
-from . import approx, assert_distribution
-
 import pytest
 
 from d20 import distribution
 from d20.errors import RollError
+from . import approx, assert_distribution
 
 
 def test_mi():

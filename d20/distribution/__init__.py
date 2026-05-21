@@ -1,6 +1,6 @@
-from .. import diceast as ast
 from .calculate import ConvolutionDistributionBuilder, DiscreteDistributionBuilder
 from .distribution import Distribution
+from .. import diceast as ast
 
 
 class DistributionBuilder:
