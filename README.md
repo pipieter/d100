@@ -33,6 +33,27 @@ pip install git+https://github.com/pipieter/d20lenny@main
 '1d20 + 5'
 ```
 
+An interactive session can be started by calling the library as a module.
+
+```pycon
+python3 -m d20
+
+>>> roll 1d20
+'1d20 (6) = 6'
+
+>>> distribution 1d4
+Calculation time: 0.00 seconds
+Mean:  2.50
+Stdev: 1.12
+
+1.  25.000%  ██████████████████████████████████████████████████
+2.  25.000%  ██████████████████████████████████████████████████
+3.  25.000%  ██████████████████████████████████████████████████
+4.  25.000%  ██████████████████████████████████████████████████
+```
+
+# Rolls
+
 ## Documentation
 
 Check out the docs on [Read the Docs](https://d20.readthedocs.io/en/latest/start.html)!
@@ -326,3 +347,31 @@ $ python3 -m timeit -s "from d20 import roll; expr='1d20+'*50+'1d20'" "roll(expr
 $ python3 -m timeit -s "from d20 import roll" "roll('10d20rr<20')"
 1000 loops, best of 5: 1.26 msec per loop
 ```
+
+# Distributions
+
+Aside from rolling dice, d20lenny can also be used to calculate the distribution of dice following the exact same syntax.
+
+A distribution can be created using the `distribution` function. This returns an object with all the possible values. Each value is a possible dice result. All values have an equal chance of appearing, and a value can appear multiple times.
+
+The possible values can be found with `.keys()`. Individual values can be retrieved with `.get()`. The mean and standard deviation can be found with `.mean()` and `.stdev()` respectively.
+
+```python
+from d20 import distribution
+import d20distribution
+
+dist = distribution("1d8 + 4")
+print(dist.get(5)) # 0.125
+print(dist.mean()) # 8.50
+```
+
+## Performance
+
+Internally, two distribution builders are used depending on the modifiers used. These two distributions use convolutions and discrete keys, respectively. The convolution builder is significantly faster (up to 100x performance for certain expressions), but is also more limited. Depending on which builder is used, performance may change drastically.
+
+More specifically, the discrete key builder is used in the following cases:
+
+- The e and ra modifiers are used.
+- The h and l selectors are used for any modifier.
+
+Care should thus be taken in these scenarios, as the execution time can exponentially increase with the number of dice and the number of sides the dice have. This library does not utilize any internal limits, and it is up to the user to avoid overly complex expressions.
