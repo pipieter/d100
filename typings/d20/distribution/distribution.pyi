@@ -10,7 +10,6 @@ class Distribution:
             Iterable[int]: The possible dice sums of the distribution sorted from lowest to highest.
         """
         ...
-
     def values(self) -> Iterable[float]:
         """Get all stored probability values of the distribution.
 
@@ -18,7 +17,6 @@ class Distribution:
             Iterable[float]: The possible probability values of the distribution, in no particular order.
         """
         ...
-
     def get(self, key: int) -> float:
         """Get the probability of a single key.
 
@@ -29,7 +27,6 @@ class Distribution:
             float: The stored probability of the key, or zero if the key is not present.
         """
         ...
-
     def get_at_least(self, key: int) -> float:
         """Get the probability of getting at least the key.
 
@@ -40,7 +37,6 @@ class Distribution:
             float: The probability of getting at least the key, inclusive of the key.
         """
         ...
-
     def get_at_most(self, key: int) -> float:
         """Get the probability of getting at most the key.
 
@@ -51,7 +47,6 @@ class Distribution:
             float: The probability of getting at most the key, inclusive of the key.
         """
         ...
-
     def min(self) -> int:
         """Get the minimum key in the distribution.
 
@@ -59,7 +54,6 @@ class Distribution:
             int: The lowest key in the distribution.
         """
         ...
-
     def max(self) -> int:
         """Get the maximum key in the distribution.
 
@@ -67,7 +61,6 @@ class Distribution:
             int: The highest key in the distribution.
         """
         ...
-
     def mean(self, key_mapping: Optional[Callable[[int], int]] = ...) -> float:
         """Get the mean value of the distribution.
 
@@ -78,7 +71,6 @@ class Distribution:
             float: The mean of the distribution.
         """
         ...
-
     def stdev(self) -> float:
         """Get the standard deviation of the distribution.
 
@@ -86,7 +78,6 @@ class Distribution:
             float: The standard deviation of the distribution.
         """
         ...
-
     def __add__(self, other: Distribution) -> Distribution:
         """Adds two distributions together, e.g. 1d20 + 1d4.
 
@@ -97,7 +88,6 @@ class Distribution:
             Distribution: The sum of the two distributions.
         """
         ...
-
     def __sub__(self, other: Distribution) -> Distribution:
         """Subtract two distributions from each other, e.g. 1d20 - 1d4.
 
@@ -108,7 +98,6 @@ class Distribution:
             Distribution: The difference of the two distributions.
         """
         ...
-
     def __mul__(self, other: Distribution) -> Distribution:
         """Multiply two distributions together, e.g. 1d20 * 1d4.
 
@@ -119,7 +108,6 @@ class Distribution:
             Distribution: The product of the two distributions.
         """
         ...
-
     def __floordiv__(self, other: Distribution) -> Distribution:
         """Divide two distributions from each other, e.g. 1d20 / 1d4. Note that this is the floor
         division, and not the true division, as distribution keys need to be integers.
@@ -134,7 +122,6 @@ class Distribution:
             Distribution: The division of the two distributions.
         """
         ...
-
     def __lt__(self, other: Distribution) -> Distribution:
         """Compare two distributions using the less than operator, e.g. 1d6 < 1d8.
 
@@ -145,7 +132,6 @@ class Distribution:
             Distribution: The resulting less than comparison.
         """
         ...
-
     def __le__(self, other: Distribution) -> Distribution:
         """Compare two distributions using the less than or equal operator, e.g. 1d6 <= 1d8.
 
@@ -156,7 +142,6 @@ class Distribution:
             Distribution: The resulting less than or equal comparison.
         """
         ...
-
     def __gt__(self, other: Distribution) -> Distribution:
         """Compare two distributions using the greater than operator, e.g. 1d6 > 1d8.
 
@@ -167,7 +152,6 @@ class Distribution:
             Distribution: The resulting greater than comparison.
         """
         ...
-
     def __ge__(self, other: Distribution) -> Distribution:
         """Compare two distributions using the greater or equal than operator, e.g. 1d6 >= 1d8.
 
@@ -178,7 +162,6 @@ class Distribution:
             Distribution: The resulting greater or equal than comparison.
         """
         ...
-
     def equals(self, other: Distribution) -> Distribution:
         """Compare two distributions using the equality operator, e.g. 1d6 == 1d8.
 
@@ -189,7 +172,6 @@ class Distribution:
             Distribution: The resulting equality comparison.
         """
         ...
-
     def not_equals(self, other: Distribution) -> Distribution:
         """Compare two distributions using the inequality operator, e.g. 1d6 != 1d8.
 
@@ -200,7 +182,6 @@ class Distribution:
             Distribution: The resulting inequality comparison.
         """
         ...
-
     def __neg__(self) -> Distribution:
         """Negate the values of a distribution.
 
@@ -208,7 +189,6 @@ class Distribution:
             Distribution: The distribution with the signs of all of its keys reversed.
         """
         ...
-
     def advantage(self, count: int = ...) -> Distribution:
         """Calculate the advantage of a distribution. This means that for all possible
         keys in the distribution, a pairwise combination is taken where the highest value
@@ -227,7 +207,6 @@ class Distribution:
             taken each time.
         """
         ...
-
     def disadvantage(self, count: int = ...) -> Distribution:
         """Calculate the disadvantage of a distribution. This means that for all possible
         keys in the distribution, a pairwise combination is taken where the lowest value
@@ -246,7 +225,6 @@ class Distribution:
             taken each time.
         """
         ...
-
     def __copy__(self) -> Distribution:
         """Create a copy of the distribution. All values of the other distribution
         are deep-copied.
@@ -255,7 +233,6 @@ class Distribution:
             Distribution: A copy of the distribution.
         """
         ...
-
     def __deepcopy__(self) -> Distribution:
         """Creates a deep copy of the distribution.
 

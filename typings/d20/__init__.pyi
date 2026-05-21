@@ -1,9 +1,9 @@
 from . import diceast as ast
+from .distribution.distribution import Distribution
 from .enums import *
 from .errors import *
 from .roll import RollResult
 from .roll.stringifier import Stringifier
-from .distribution.distribution import Distribution
 
 def parse(expr: str | ast.Expression) -> ast.Expression: ...
 def roll(

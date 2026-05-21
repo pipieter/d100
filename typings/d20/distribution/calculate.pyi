@@ -1,5 +1,6 @@
 import abc
 from collections import defaultdict
+
 from .distribution import Distribution
 from .. import diceast as ast
 
@@ -14,7 +15,6 @@ class AbstractDistributionBuilder(abc.ABC):
             Distribution: The distribution object matching the current state of the distribution.
         """
         ...
-
     def apply_operation(self, op: ast.Operator) -> None:
         """Apply a valid d20 operator to the current distribution. This internally  changes the
         state of the builder
@@ -26,7 +26,6 @@ class AbstractDistributionBuilder(abc.ABC):
             RollError: When the operation in question is unknown or not supported.
         """
         ...
-
     @abc.abstractmethod
     def apply_mi(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 minimum operator to the builder.
@@ -35,7 +34,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `mi` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_ma(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 maximum operator to the builder.
@@ -44,7 +42,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `ma` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_ro(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 re-roll once operator to the builder.
@@ -53,7 +50,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `ro` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_e(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 explode operator to the builder.
@@ -62,7 +58,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `e` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_k(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 keep operator to the builder.
@@ -71,7 +66,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `k` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_p(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 drop operator to the builder.
@@ -80,7 +74,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `p` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_ra(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 reroll and add operator to the builder.
@@ -89,7 +82,6 @@ class AbstractDistributionBuilder(abc.ABC):
             selectors (list[ast.Selector]): A list of valid d20 selectors matching the `ra` operator.
         """
         ...
-
     @abc.abstractmethod
     def apply_rr(self, selectors: list[ast.Selector]) -> None:
         """Apply the d20 repeated reroll operator to the builder.
@@ -125,7 +117,6 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
             operations (list[ast.Operator]): A list of operators to be applied to the expression.
         """
         ...
-
     def distribution(self) -> Distribution: ...
     @staticmethod
     def supports_operation(operation: ast.Operator) -> bool:
@@ -138,7 +129,6 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
             bool: Whether the operation is supported.
         """
         ...
-
     def apply_mi(self, selectors: list[ast.Selector]) -> None: ...
     def apply_ma(self, selectors: list[ast.Selector]) -> None: ...
     def apply_k(self, selectors: list[ast.Selector]) -> None: ...
@@ -163,7 +153,6 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             operations (list[ast.Operator]): A list of operators to be applied to the expression.
         """
         ...
-
     def distribution(self) -> Distribution: ...
     def apply_mi(self, selectors: list[ast.Selector]) -> None: ...
     def apply_ma(self, selectors: list[ast.Selector]) -> None: ...
