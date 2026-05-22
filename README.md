@@ -1,4 +1,4 @@
-# d1000
+# d100
 
 A fast, powerful, and extensible dice engine for virtual tabletops! This is a fork of the [d20 Python library](https://github.com/zhudotexe/d20) to be used with [the Lenny D&D bot](https://github.com/DaFrankort/lenny-dnd-bot).
 
