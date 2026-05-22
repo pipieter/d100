@@ -4,7 +4,7 @@ from .. import diceast as ast
 
 class DistributionBuilder:
     def build(self, expr: ast.Node) -> Distribution:
-        """Parse a distribution from a d20 ast node.
+        """Parse a distribution from a ast node.
         Args:
             ast (ast.Node): The node to be parsed.
 

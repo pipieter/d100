@@ -6,8 +6,8 @@ end distributions.
 
 import pytest
 
-import d20
-from d20.distribution.calculate import (
+import d100
+from d100.distribution.calculate import (
     ConvolutionDistributionBuilder,
     DiscreteDistributionBuilder,
 )
@@ -16,7 +16,7 @@ from . import approx
 
 def operator(op: str, sel: tuple[str | None, int]):
     cat, num = sel
-    return d20.ast.Operator(op, [d20.ast.Selector(cat, num)])
+    return d100.ast.Operator(op, [d100.ast.Selector(cat, num)])
 
 
 @pytest.mark.parametrize("count", [1, 2, 3, 4])
@@ -45,7 +45,7 @@ def operator(op: str, sel: tuple[str | None, int]):
         [operator("mi", (None, 2)), operator("k", (">", 3))],
     ],
 )
-def test_builders(count: int, sides: int, operators: list[d20.ast.Operator]):
+def test_builders(count: int, sides: int, operators: list[d100.ast.Operator]):
     convolution = ConvolutionDistributionBuilder(count, sides, operators).distribution()
     discrete = DiscreteDistributionBuilder(count, sides, operators).distribution()
 

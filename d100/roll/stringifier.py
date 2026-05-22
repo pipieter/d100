@@ -28,7 +28,7 @@ class Stringifier(abc.ABC):
         Transforms a rolled expression into a string recursively, bottom-up.
 
         :param the_roll: The expression to stringify.
-        :type the_roll: d20.Expression
+        :type the_roll: Expression
         :rtype: str
         """
         return self._stringify(roll)
@@ -38,7 +38,7 @@ class Stringifier(abc.ABC):
         Called on each node that needs to be stringified.
 
         :param node: The node to stringify.
-        :type node: d20.Number
+        :type node: Number
         :rtype: str
         """
         handler = self._nodes[type(node)]
@@ -48,7 +48,7 @@ class Stringifier(abc.ABC):
     def _str_expression(self, node: Expression) -> str:
         """
         :param node: The node to stringify.
-        :type node: d20.Expression
+        :type node: Expression
         :rtype: str
         """
         raise NotImplementedError
@@ -57,7 +57,7 @@ class Stringifier(abc.ABC):
     def _str_literal(self, node: Literal) -> str:
         """
         :param node: The node to stringify.
-        :type node: d20.Literal
+        :type node: Literal
         :rtype: str
         """
         raise NotImplementedError
@@ -66,7 +66,7 @@ class Stringifier(abc.ABC):
     def _str_unop(self, node: UnOp) -> str:
         """
         :param node: The node to stringify.
-        :type node: d20.UnOp
+        :type node: UnOp
         :rtype: str
         """
         raise NotImplementedError
@@ -75,7 +75,7 @@ class Stringifier(abc.ABC):
     def _str_binop(self, node: BinOp) -> str:
         """
         :param node: The node to stringify.
-        :type node: d20.BinOp
+        :type node: BinOp
         :rtype: str
         """
         raise NotImplementedError
@@ -84,7 +84,7 @@ class Stringifier(abc.ABC):
     def _str_parenthetical(self, node: Parenthetical) -> str:
         """
         :param node: The node to stringify.
-        :type node: d20.Parenthetical
+        :type node: Parenthetical
         :rtype: str
         """
         raise NotImplementedError
@@ -93,7 +93,7 @@ class Stringifier(abc.ABC):
     def _str_dice(self, node: Dice) -> str:
         """
         :param node: The node to stringify.
-        :type node: d20.Dice
+        :type node: Dice
         :rtype: str
         """
         raise NotImplementedError

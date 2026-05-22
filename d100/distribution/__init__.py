@@ -5,7 +5,7 @@ from .. import diceast as ast
 
 class DistributionBuilder:
     def _parse_dimensions(self, count: int, sides: str | int) -> tuple[int, int]:
-        """Parse the dimensions from a d20.ast.Dice or d20.ast.OperatedDice
+        """Parse the dimensions from a dice
 
         Args:
             count (int): The count of the dice.

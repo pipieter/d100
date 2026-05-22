@@ -5,7 +5,7 @@ from typing import Any
 from _typeshed import Incomplete
 from lark import Token, Transformer
 
-from d20.errors import RollSyntaxError as RollSyntaxError
+from d100.errors import RollSyntaxError as RollSyntaxError
 
 DiceSize: Incomplete
 

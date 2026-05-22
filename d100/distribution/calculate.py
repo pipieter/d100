@@ -23,7 +23,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     def apply_operation(self, op: ast.Operator) -> None:
-        """Apply a valid d20 operator to the current distribution. This internally  changes the
+        """Apply a valid operator to the current distribution. This internally  changes the
         state of the builder
 
         Args:
@@ -53,73 +53,73 @@ class AbstractDistributionBuilder(abc.ABC):
 
     @abc.abstractmethod
     def apply_mi(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 minimum operator to the builder.
+        """Apply the minimum operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `mi` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `mi` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_ma(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 maximum operator to the builder.
+        """Apply the maximum operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `ma` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `ma` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_ro(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 re-roll once operator to the builder.
+        """Apply the re-roll once operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `ro` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `ro` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_e(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 explode operator to the builder.
+        """Apply the explode operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `e` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `e` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_k(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 keep operator to the builder.
+        """Apply the keep operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `k` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `k` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_p(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 drop operator to the builder.
+        """Apply the drop operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `p` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `p` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_ra(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 reroll and add operator to the builder.
+        """Apply the reroll and add operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `ra` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `ra` operator.
         """
         ...
 
     @abc.abstractmethod
     def apply_rr(self, selectors: list[ast.Selector]) -> None:
-        """Apply the d20 repeated reroll operator to the builder.
+        """Apply the repeated reroll operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid d20 selectors matching the `rr` operator.
+            selectors (list[ast.Selector]): A list of valid selectors matching the `rr` operator.
         """
         ...
 

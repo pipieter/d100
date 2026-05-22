@@ -1,9 +1,9 @@
 import pytest
 
-import d20.diceast as ast
-from d20 import *
-from d20.roll import RollResult
-from d20.roll.expression import Expression
+import d100.diceast as ast
+from d100 import *
+from d100.roll import RollResult
+from d100.roll.expression import Expression
 
 
 def r(e: str):
