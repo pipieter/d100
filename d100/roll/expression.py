@@ -15,7 +15,7 @@ class RollContext:
     """
     A class to track information about rolls to ensure all rolls halt eventually.
 
-    To use this class, pass an instance to the constructor of :class:`d20.Roller`.
+    To use this class, pass an instance to the constructor of `Roller`.
     """
 
     def __init__(self, rng: random.Random, max_rolls: int = 1000):

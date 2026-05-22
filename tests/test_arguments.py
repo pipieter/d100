@@ -1,7 +1,7 @@
 import pytest
 
-from d20 import roll
-from d20.enums import Advantage
+from d100 import roll
+from d100.enums import Advantage
 
 
 def test_advantage_d20():

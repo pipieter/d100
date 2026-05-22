@@ -1,6 +1,6 @@
 from typing import Union
 
-from d20.distribution.distribution import Distribution
+from d100.distribution.distribution import Distribution
 
 TNumeric = Union[int, float]
 

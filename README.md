@@ -1,10 +1,10 @@
-# d20lenny
+# d1000
 
-A fast, powerful, and extensible dice engine for D&D, d20 systems, and any other system that needs dice! This is a fork of the [d20 Python library](https://github.com/zhudotexe/d20) to be used with [the Lenny D&D bot](https://github.com/DaFrankort/lenny-dnd-bot).
+A fast, powerful, and extensible dice engine for virtual tabletops! This is a fork of the [d20 Python library](https://github.com/zhudotexe/d20) to be used with [the Lenny D&D bot](https://github.com/DaFrankort/lenny-dnd-bot).
 
 ## Key Features
 
-- Quick to start - just use `d20.roll()`!
+- Quick to start - just use `d10.roll()`!
 - Optimized for speed and memory efficiency
 - Highly extensible API for custom behaviour and dice stringification
 - Built-in execution limits against malicious dice expressions
@@ -15,14 +15,14 @@ A fast, powerful, and extensible dice engine for D&D, d20 systems, and any other
 **Requires Python 3.11+**.
 
 ```bash
-pip install git+https://github.com/pipieter/d20lenny@main
+pip install git+https://github.com/pipieter/d100@main
 ```
 
 ## Quickstart
 
 ```pycon
->>> import d20
->>> result = d20.roll("1d20+5")
+>>> import d100
+>>> result = d100.roll("1d20+5")
 >>> str(result)
 '1d20 (10) + 5 = `15`'
 >>> result.total
@@ -36,7 +36,7 @@ pip install git+https://github.com/pipieter/d20lenny@main
 An interactive session can be started by calling the library as a module.
 
 ```pycon
-python3 -m d20
+python3 -m 100
 
 >>> roll 1d20
 '1d20 (6) = 6'
@@ -65,7 +65,7 @@ The typings of the file can be generated with the following commands, which also
 ```bash
 # mypy is required for stubgen
 pip install mypy
-stubgen -p d20 --include-docstrings -o typings
+stubgen -p d100 --include-docstrings -o typings
 black typings
 isort typings
 ```
@@ -169,7 +169,7 @@ Selectors select from the remaining kept values in a set.
 ### Examples
 
 ```pycon
->>> from d20 import roll
+>>> from d100 import roll
 >>> r = roll("4d6kh3")  # highest 3 of 4 6-sided dice
 >>> r.total
 14
@@ -197,18 +197,18 @@ Selectors select from the remaining kept values in a set.
 
 ## Custom Stringifier
 
-By default, d20 stringifies the result of each dice roll formatted in Markdown, which may not be useful in your
+By default, d100 stringifies the result of each dice roll formatted in Markdown, which may not be useful in your
 application.
 To change this behaviour, you can create a subclass
-of [`d20.Stringifier`](https://github.com/avrae/d20/blob/master/d20/stringifiers.py)
-(or `d20.SimpleStringifier` as a starting point), and implement the `_str_*` methods to customize how your dice tree is
+of [`d100.Stringifier`](https://github.com/pipieter/d100/blob/master/d100/roll/stringifiers.py)
+(or `d100.SimpleStringifier` as a starting point), and implement the `_str_*` methods to customize how your dice tree is
 stringified.
 
 Then, simply pass an instance of your stringifier into the `roll()` function!
 
 ```pycon
->>> import d20
->>> class MyStringifier(d20.SimpleStringifier):
+>>> import d100
+>>> class MyStringifier(d100.SimpleStringifier):
 ...     def _stringify(self, node):
 ...         if not node.kept:
 ...             return 'X'
@@ -217,7 +217,7 @@ Then, simply pass an instance of your stringifier into the `roll()` function!
 ...     def _str_expression(self, node):
 ...         return f"The result of the roll {self._stringify(node.roll)} was {int(node.total)}"
 
->>> result = d20.roll("4d6e6kh3", stringifier=MyStringifier())
+>>> result = d100.roll("4d6e6kh3", stringifier=MyStringifier())
 >>> str(result)
 'The result of the roll 4d6e6kh3 (X, 5, 6!, 6!, X, X) was 17'
 ```
@@ -228,7 +228,7 @@ The raw results of dice rolls are returned in [`Expression`](https://github.com/
 objects, which can be accessed as such:
 
 ```pycon
->>> from d20 import roll
+>>> from d100 import roll
 >>> result = roll("3d6 + 1d4 + 3")
 >>> str(result)
 '3d6 (4, **6**, **6**) + 1d4 (**1**) + 3 = `20`'
@@ -277,7 +277,7 @@ or modify the result by adding in resistances or other modifications.
 Finding the left and right-most operands:
 
 ```pycon
->>> from d20 import roll
+>>> from d100 import roll
 
 >>> binop = roll("1 + 2 + 3 + 4")
 >>> left = binop.expr
@@ -292,7 +292,7 @@ Finding the left and right-most operands:
 >>> right
 <Literal 4>
 
->>> from d20 import utils  # these patterns are available in the utils submodule:
+>>> from d100 import utils  # these patterns are available in the utils submodule:
 >>> utils.leftmost(binop.expr)
 <Literal 1>
 >>> utils.rightmost(binop.expr)
@@ -302,7 +302,7 @@ Finding the left and right-most operands:
 Searching for the d4:
 
 ```pycon
->>> from d20 import roll, Dice, SimpleStringifier, utils
+>>> from d100 import roll, Dice, SimpleStringifier, utils
 
 >>> mixed = roll("-1d8 + 4 - (3, 1d4)kh1")
 >>> str(mixed)
@@ -325,40 +325,39 @@ By default, the parser caches the 256 most frequently used dice expressions in a
 With caching:
 
 ```bash
-$ python3 -m timeit -s "from d20 import roll" "roll('1d20')"
+$ python3 -m timeit -s "from d100 import roll" "roll('1d20')"
 10000 loops, best of 5: 21.6 usec per loop
-$ python3 -m timeit -s "from d20 import roll" "roll('100d20')"
+$ python3 -m timeit -s "from d100 import roll" "roll('100d20')"
 500 loops, best of 5: 572 usec per loop
-$ python3 -m timeit -s "from d20 import roll; expr='1d20+'*50+'1d20'" "roll(expr)"
+$ python3 -m timeit -s "from d100 import roll; expr='1d20+'*50+'1d20'" "roll(expr)"
 500 loops, best of 5: 732 usec per loop
-$ python3 -m timeit -s "from d20 import roll" "roll('10d20rr<20')"
+$ python3 -m timeit -s "from d100 import roll" "roll('10d20rr<20')"
 1000 loops, best of 5: 1.13 msec per loop
 ```
 
 Without caching:
 
 ```bash
-$ python3 -m timeit -s "from d20 import roll" "roll('1d20')"
+$ python3 -m timeit -s "from d100 import roll" "roll('1d20')"
 5000 loops, best of 5: 61.6 usec per loop
-$ python3 -m timeit -s "from d20 import roll" "roll('100d20')"
+$ python3 -m timeit -s "from d100 import roll" "roll('100d20')"
 500 loops, best of 5: 620 usec per loop
-$ python3 -m timeit -s "from d20 import roll; expr='1d20+'*50+'1d20'" "roll(expr)"
+$ python3 -m timeit -s "from d100 import roll; expr='1d20+'*50+'1d20'" "roll(expr)"
 500 loops, best of 5: 2.1 msec per loop
-$ python3 -m timeit -s "from d20 import roll" "roll('10d20rr<20')"
+$ python3 -m timeit -s "from d100 import roll" "roll('10d20rr<20')"
 1000 loops, best of 5: 1.26 msec per loop
 ```
 
 # Distributions
 
-Aside from rolling dice, d20lenny can also be used to calculate the distribution of dice following the exact same syntax.
+Aside from rolling dice, d100 can also be used to calculate the distribution of dice following the exact same syntax.
 
 A distribution can be created using the `distribution` function. This returns an object with all the possible values. Each value is a possible dice result. All values have an equal chance of appearing, and a value can appear multiple times.
 
 The possible values can be found with `.keys()`. Individual values can be retrieved with `.get()`. The mean and standard deviation can be found with `.mean()` and `.stdev()` respectively.
 
 ```python
-from d20 import distribution
-import d20distribution
+from d100 import distribution
 
 dist = distribution("1d8 + 4")
 print(dist.get(5)) # 0.125

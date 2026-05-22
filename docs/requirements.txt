@@ -1,4 +1,0 @@
--r ../requirements.txt
-Sphinx~=7.1.2
-m2r2~=0.3.3
-sphinx-rtd-theme~=2.0.0

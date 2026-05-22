@@ -22,7 +22,7 @@ jobs:
       - name: Black linter
         uses: psf/black@stable
         with:
-          src: "d20 tests"
+          src: "d100 tests"
           options: "--check --verbose"
 
   pyright:

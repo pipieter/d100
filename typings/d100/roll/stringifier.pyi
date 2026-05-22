@@ -16,7 +16,7 @@ class Stringifier(abc.ABC, metaclass=abc.ABCMeta):
         Transforms a rolled expression into a string recursively, bottom-up.
 
         :param the_roll: The expression to stringify.
-        :type the_roll: d20.Expression
+        :type the_roll: Expression
         :rtype: str
         """
 

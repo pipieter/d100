@@ -8,7 +8,7 @@ import cachetools
 import lark
 from lark import Lark, Token, Transformer
 
-from d20.errors import RollError, RollSyntaxError
+from d100.errors import RollError, RollSyntaxError
 
 # ===== transformer, parser -> ast =====
 

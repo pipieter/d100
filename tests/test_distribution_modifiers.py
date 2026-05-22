@@ -1,7 +1,7 @@
 import pytest
 
-from d20 import distribution
-from d20.errors import RollError
+from d100 import distribution
+from d100.errors import RollError
 from . import approx, assert_distribution
 
 
