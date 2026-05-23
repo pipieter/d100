@@ -1,13 +1,12 @@
-from collections.abc import Sequence
 
-from d100.ast.literal import ASTLiteral, Literal
-from .ast.binop import ASTBinOp, BinOp
-from .ast.dice import ASTDice, Dice, Die
-from .ast.expression import ASTExpression, Expression
+from d100.ast.literal import ASTLiteral
+from .ast.binop import ASTBinOp
+from .ast.dice import ASTDice, Dice
+from .ast.expression import ASTExpression
 from .ast.node import ASTNode, Number
 from .ast.operators import AdvantageCategory, Operator, Selector
-from .ast.parenthetical import ASTParenthetical, Parenthetical
-from .ast.unop import ASTUnOp, UnOp
+from .ast.parenthetical import ASTParenthetical
+from .ast.unop import ASTUnOp
 from .enums import Critical
 
 
@@ -90,23 +89,6 @@ def add_adv_operator_to_dice(dice: ASTDice, adv: AdvantageCategory | None, count
 
     dice.operations.append(Operator(adv, [Selector(None, count)]))
     return True
-
-
-def extract_dice(node: Number) -> Sequence[Die]:
-    if isinstance(node, Expression):
-        return extract_dice(node.value)
-    if isinstance(node, Literal):
-        return []
-    if isinstance(node, Dice):
-        return node.keptset
-    if isinstance(node, Parenthetical):
-        return extract_dice(node.value)
-    if isinstance(node, UnOp):
-        return extract_dice(node.value)
-    if isinstance(node, BinOp):
-        return list(extract_dice(node.left)) + list(extract_dice(node.right))
-
-    raise NotImplementedError(f"extract_dice not implemented for {type(node)}")
 
 
 def expression_is_comparison(node: ASTNode) -> bool:

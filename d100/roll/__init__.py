@@ -117,7 +117,7 @@ class Roller:
         roll, rolls = node.roll(context)
 
         # Add die warning
-        die = utils.extract_dice(roll)
+        die = roll.extract_dice()
         if len(die) == 0:
             warnings.append("Expression did not contain any dice.")
 
