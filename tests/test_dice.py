@@ -1,13 +1,11 @@
 import pytest
 
 from d100 import roll
-from d100.roll import RollResult
-
 from d100.ast.expression import Expression
 from d100.ast.node import ASTNode
-from d100.errors import RollError, RollSyntaxError, RollValueError, TooManyRolls
-
 from d100.enums import Critical
+from d100.errors import RollError, RollSyntaxError, RollValueError, TooManyRolls
+from d100.roll import RollResult
 
 
 def r(e: str):

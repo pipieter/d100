@@ -8,11 +8,11 @@ from collections.abc import Sequence
 
 import pytest
 
+from d100.ast.operators import Operator, OperatorCategory, Selector, SelectorCategory
 from d100.distribution import (
     ConvolutionDistributionBuilder,
     DiscreteDistributionBuilder,
 )
-from d100.ast.operators import Operator, Selector, OperatorCategory, SelectorCategory
 from . import approx
 
 
