@@ -1,59 +1,7 @@
-from d100.ast.literal import ASTLiteral
-from .ast.binop import ASTBinOp
 from .ast.dice import ASTDice, Dice
-from .ast.expression import ASTExpression
-from .ast.node import ASTNode, Number
+from .ast.node import Number
 from .ast.operators import AdvantageCategory, Operator, Selector
-from .ast.parenthetical import ASTParenthetical
-from .ast.unop import ASTUnOp
 from .enums import Critical
-
-
-def find_d20(node: ASTNode) -> ASTDice | None:
-    """
-    Find the first fitting node that represents a d20 in a standard d20 plus modifiers roll.
-
-    Args:
-        node (ast.Node): The root node of the tree to search in.
-
-    Raises:
-        NotImplementedError: If an unknown node type is encountered.
-
-    Returns:
-        ast.Dice | None: A dice object representing the d20, or None if none could be found.
-    """
-    if isinstance(node, ASTExpression):
-        return find_d20(node.value)
-
-    if isinstance(node, ASTParenthetical):
-        return find_d20(node.value)
-
-    if isinstance(node, ASTLiteral):
-        return None
-
-    if isinstance(node, ASTUnOp):
-        return find_d20(node.value)
-
-    if isinstance(node, ASTBinOp):
-        if node.op not in ["+", "-"]:
-            return None
-
-        left = find_d20(node.left)
-        if left is not None:
-            return left
-
-        right = find_d20(node.right)
-        if right is not None:
-            return right
-
-        return None
-
-    if isinstance(node, ASTDice):
-        if node.num == 1 and node.size == 20:
-            return node
-        return None
-
-    raise NotImplementedError(f"find_d20 not implemented for {type(node)}")
 
 
 def determine_crit_type(root: Number, d20: Number | None) -> Critical:

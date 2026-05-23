@@ -101,7 +101,7 @@ class Roller:
         if stringifier is None:
             stringifier = SimpleStringifier()
 
-        d20 = utils.find_d20(node)
+        d20 = node.find_d20()
         context = RollContext(self._rng)
         warnings: list[str] = []
 
