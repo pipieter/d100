@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 
-from d100.ast.die import Die
+from .dice import ASTDice
+from .die import DiceSize, Die
 
 from .node import ASTNode, Number
 from .operators import UnaryOperator
@@ -82,3 +83,6 @@ class ASTUnOp(ASTNode):
     @property
     def is_comparison(self) -> bool:
         return False
+
+    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
+        return self.value.find_dice(count, size)

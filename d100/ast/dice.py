@@ -3,6 +3,7 @@ from typing import Callable, Mapping
 
 from lark import Token
 
+
 from .die import DiceSize, Die
 
 from .node import ASTNode, Number
@@ -363,3 +364,8 @@ class ASTDice(ASTNode):
     @property
     def is_comparison(self) -> bool:
         return False
+
+    def find_dice(self, count: int, size: DiceSize) -> "ASTDice | None":
+        if self.num == count and self.size == size:
+            return self
+        return None

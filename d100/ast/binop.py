@@ -2,7 +2,8 @@ import math
 from collections.abc import Sequence
 from typing import Callable, Mapping
 
-from d100.ast.die import Die
+from d100.ast.dice import ASTDice
+from d100.ast.die import DiceSize, Die
 
 from .node import ASTNode, Number
 from .operators import BinaryOperator
@@ -127,3 +128,17 @@ class ASTBinOp(ASTNode):
     @property
     def is_comparison(self) -> bool:
         return self.op in {">", "<", ">=", "<=", "==", "!="}
+
+    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
+        if self.op not in ["-", "+"]:
+            return None
+
+        left = self.left.find_dice(count, size)
+        if left is not None:
+            return left
+
+        right = self.right.find_dice(count, size)
+        if right is not None:
+            return right
+
+        return None
