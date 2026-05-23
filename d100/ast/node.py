@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Optional, Self
+from typing import TYPE_CHECKING, Any, Self
 
 if TYPE_CHECKING:
     from .dice import ASTDice
@@ -100,9 +100,9 @@ class ASTNode(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def find_dice(self, count: int, size: DiceSize) -> Optional[ASTDice]:
+    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
         """Find the first standalone dice object with a number of sides and a specific size."""
         raise NotImplementedError
 
-    def find_d20(self) -> Optional[ASTDice]:
+    def find_d20(self) -> ASTDice | None:
         return self.find_dice(1, 20)
