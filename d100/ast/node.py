@@ -88,3 +88,9 @@ class ASTNode(abc.ABC):
     def distribution(self) -> Distribution:
         """Build a distribution of the node."""
         raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def is_comparison(self) -> bool:
+        """Return whether or not the node is a binary comparison."""
+        raise NotImplementedError

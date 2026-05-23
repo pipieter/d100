@@ -123,3 +123,7 @@ class ASTBinOp(ASTNode):
 
     def distribution(self) -> Distribution:
         return self.DISTRIBUTION_OPS[self.op](self.left.distribution(), self.right.distribution())
+
+    @property
+    def is_comparison(self) -> bool:
+        return self.op in {">", "<", ">=", "<=", "==", "!="}

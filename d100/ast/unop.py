@@ -78,3 +78,7 @@ class ASTUnOp(ASTNode):
                 return distribution
             case "-":
                 return -distribution
+
+    @property
+    def is_comparison(self) -> bool:
+        return False

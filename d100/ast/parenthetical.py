@@ -63,3 +63,7 @@ class ASTParenthetical(ASTNode):
 
     def distribution(self) -> Distribution:
         return self.value.distribution()
+
+    @property
+    def is_comparison(self) -> bool:
+        return self.value.is_comparison

@@ -70,3 +70,7 @@ class ASTLiteral(ASTNode):
     def distribution(self) -> Distribution:
         value = self._calculated_value(round_down=True)
         return Distribution({value: 1.0})
+
+    @property
+    def is_comparison(self) -> bool:
+        return False

@@ -359,3 +359,7 @@ class ASTDice(ASTNode):
             builder = ConvolutionDistributionBuilder(count, sides, operations)
 
         return builder.distribution()
+
+    @property
+    def is_comparison(self) -> bool:
+        return False
