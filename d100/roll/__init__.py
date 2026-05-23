@@ -4,7 +4,7 @@ import dataclasses
 import random
 from typing import Optional
 
-from .stringifier import SimpleStringifier, Stringifier
+from ..stringifier import SimpleStringifier, Stringifier
 from .. import utils
 from ..ast.node import ASTNode, Number
 from ..context import RollContext

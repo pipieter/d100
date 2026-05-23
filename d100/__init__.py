@@ -7,7 +7,7 @@ from .errors import *
 from .parser import Parser
 from .rand import random_impl
 from .roll import Roller, RollResult
-from .roll.stringifier import Stringifier
+from .stringifier import Stringifier
 
 _grammar_path = os.path.join(os.path.dirname(__file__), "grammar.lark")
 _parser = Parser(_grammar_path)

@@ -1,13 +1,13 @@
 import abc
 from typing import Any, Callable, Mapping, Type
 
-from ..ast.binop import BinOp
-from ..ast.dice import Dice, DiceSize, Die
-from ..ast.expression import Expression
-from ..ast.literal import Literal
-from ..ast.node import Number
-from ..ast.parenthetical import Parenthetical
-from ..ast.unop import UnOp
+from .ast.binop import BinOp
+from .ast.dice import Dice, DiceSize, Die
+from .ast.expression import Expression
+from .ast.literal import Literal
+from .ast.node import Number
+from .ast.parenthetical import Parenthetical
+from .ast.unop import UnOp
 
 __all__ = ("Stringifier", "SimpleStringifier")
 
