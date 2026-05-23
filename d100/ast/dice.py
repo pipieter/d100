@@ -3,9 +3,7 @@ from typing import Callable, Mapping
 
 from lark import Token
 
-
 from .die import DiceSize, Die
-
 from .node import ASTNode, Number
 from .operators import AdvantageCategory, Operator, OperatorCategory, Selector
 from ..context import RollContext

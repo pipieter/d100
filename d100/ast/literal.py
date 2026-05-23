@@ -4,7 +4,6 @@ from typing import Union
 
 from .dice import ASTDice
 from .die import DiceSize, Die
-
 from .node import ASTNode, Number
 from ..context import RollContext
 from ..distribution import Distribution

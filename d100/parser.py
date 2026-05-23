@@ -100,7 +100,7 @@ class Parser:
             # see if this expr is in cache
             clean_expr = expr.replace(" ", "")
             if clean_expr in self._cache:
-                dice_tree = self._cache[clean_expr].copy() # create a copy in case the user changes the tree
+                dice_tree = self._cache[clean_expr].copy()  # create a copy in case the user changes the tree
             else:
                 dice_tree = self._lark.parse(expr, start=start)  # type: ignore
                 dice_tree = typing.cast(ASTExpression, dice_tree)

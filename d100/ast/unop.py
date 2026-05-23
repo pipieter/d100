@@ -2,7 +2,6 @@ from collections.abc import Sequence
 
 from .dice import ASTDice
 from .die import DiceSize, Die
-
 from .node import ASTNode, Number
 from .operators import UnaryOperator
 from ..context import RollContext

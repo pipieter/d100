@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Optional, Self, Any
+from typing import TYPE_CHECKING, Any, Optional, Self
 
 if TYPE_CHECKING:
     from .dice import ASTDice
@@ -8,7 +8,6 @@ else:
     ASTDice = Any
 
 from .die import DiceSize, Die
-
 from ..context import RollContext
 from ..distribution import Distribution
 
