@@ -1,12 +1,17 @@
 from collections.abc import Sequence
-from typing import Literal
 
-from . import diceast as ast
+from d100.ast.literal import ASTLiteral, Literal
+from .ast.binop import ASTBinOp, BinOp
+from .ast.dice import ASTDice, Dice, Die
+from .ast.expression import ASTExpression, Expression
+from .ast.node import ASTNode, Number
+from .ast.operators import AdvantageCategory, Operator, Selector
+from .ast.parenthetical import ASTParenthetical, Parenthetical
+from .ast.unop import ASTUnOp, UnOp
 from .enums import Critical
-from .roll import expression
 
 
-def find_d20(node: ast.Node) -> ast.Dice | None:
+def find_d20(node: ASTNode) -> ASTDice | None:
     """
     Find the first fitting node that represents a d20 in a standard d20 plus modifiers roll.
 
@@ -19,19 +24,19 @@ def find_d20(node: ast.Node) -> ast.Dice | None:
     Returns:
         ast.Dice | None: A dice object representing the d20, or None if none could be found.
     """
-    if isinstance(node, ast.Expression):
-        return find_d20(node.roll)
-
-    if isinstance(node, ast.Parenthetical):
+    if isinstance(node, ASTExpression):
         return find_d20(node.value)
 
-    if isinstance(node, ast.Literal):
+    if isinstance(node, ASTParenthetical):
+        return find_d20(node.value)
+
+    if isinstance(node, ASTLiteral):
         return None
 
-    if isinstance(node, ast.UnOp):
+    if isinstance(node, ASTUnOp):
         return find_d20(node.value)
 
-    if isinstance(node, ast.BinOp):
+    if isinstance(node, ASTBinOp):
         if node.op not in ["+", "-"]:
             return None
 
@@ -45,7 +50,7 @@ def find_d20(node: ast.Node) -> ast.Dice | None:
 
         return None
 
-    if isinstance(node, ast.Dice):
+    if isinstance(node, ASTDice):
         if node.num == 1 and node.size == 20:
             return node
         return None
@@ -53,8 +58,8 @@ def find_d20(node: ast.Node) -> ast.Dice | None:
     raise NotImplementedError(f"find_d20 not implemented for {type(node)}")
 
 
-def determine_crit_type(root: expression.Number, d20: expression.Number | None) -> Critical:
-    if isinstance(d20, expression.Dice):
+def determine_crit_type(root: Number, d20: Number | None) -> Critical:
+    if isinstance(d20, Dice):
         dice = d20.keptset
     else:
         return Critical.NONE
@@ -74,7 +79,7 @@ def determine_crit_type(root: expression.Number, d20: expression.Number | None) 
     return Critical.NONE
 
 
-def add_adv_operator_to_dice(dice: ast.Dice, adv: Literal["adv", "dis", None], count: int) -> bool:
+def add_adv_operator_to_dice(dice: ASTDice, adv: AdvantageCategory | None, count: int) -> bool:
     if adv is None:
         return True
 
@@ -83,33 +88,33 @@ def add_adv_operator_to_dice(dice: ast.Dice, adv: Literal["adv", "dis", None], c
         if operator.op in ["adv", "dis"]:
             return False
 
-    dice.operations.append(ast.Operator(adv, [ast.Selector(None, count)]))
+    dice.operations.append(Operator(adv, [Selector(None, count)]))
     return True
 
 
-def extract_dice(node: expression.Number) -> Sequence[expression.Die]:
-    if isinstance(node, expression.Expression):
+def extract_dice(node: Number) -> Sequence[Die]:
+    if isinstance(node, Expression):
         return extract_dice(node.value)
-    if isinstance(node, expression.Literal):
+    if isinstance(node, Literal):
         return []
-    if isinstance(node, expression.Dice):
+    if isinstance(node, Dice):
         return node.keptset
-    if isinstance(node, expression.Parenthetical):
+    if isinstance(node, Parenthetical):
         return extract_dice(node.value)
-    if isinstance(node, expression.UnOp):
+    if isinstance(node, UnOp):
         return extract_dice(node.value)
-    if isinstance(node, expression.BinOp):
+    if isinstance(node, BinOp):
         return list(extract_dice(node.left)) + list(extract_dice(node.right))
 
     raise NotImplementedError(f"extract_dice not implemented for {type(node)}")
 
 
-def expression_is_comparison(node: ast.Node) -> bool:
-    if isinstance(node, ast.Expression):
-        return expression_is_comparison(node.roll)
-    if isinstance(node, ast.Parenthetical):
+def expression_is_comparison(node: ASTNode) -> bool:
+    if isinstance(node, ASTExpression):
         return expression_is_comparison(node.value)
-    if isinstance(node, ast.BinOp):
+    if isinstance(node, ASTParenthetical):
+        return expression_is_comparison(node.value)
+    if isinstance(node, ASTBinOp):
         return node.op in {">", "<", ">=", "<=", "==", "!="}
 
     return False
