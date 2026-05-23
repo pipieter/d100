@@ -1,5 +1,7 @@
 from collections.abc import Sequence
 
+from d100.ast.die import Die
+
 from .node import ASTNode, Number
 from .operators import UnaryOperator
 from ..context import RollContext
@@ -34,6 +36,9 @@ class UnOp(Number):
 
     def copy(self) -> Number:
         return UnOp(self.op, self.value.copy(), self.ast)
+
+    def extract_dice(self) -> Sequence[Die]:
+        return self.value.extract_dice()
 
 
 class ASTUnOp(ASTNode):

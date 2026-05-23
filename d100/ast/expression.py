@@ -1,5 +1,7 @@
 from collections.abc import Sequence
 
+from d100.ast.die import Die
+
 from .node import ASTNode, Number
 from ..context import RollContext
 from ..distribution import Distribution
@@ -27,6 +29,9 @@ class Expression(Number):
 
     def copy(self) -> Number:
         return Expression(self.value.copy(), self.ast)
+
+    def extract_dice(self) -> Sequence[Die]:
+        return self.value.extract_dice()
 
 
 class ASTExpression(ASTNode):

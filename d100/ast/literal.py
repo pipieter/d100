@@ -2,6 +2,8 @@ import math
 from collections.abc import Sequence
 from typing import Union
 
+from d100.ast.die import Die
+
 from .node import ASTNode, Number
 from ..context import RollContext
 from ..distribution import Distribution
@@ -31,6 +33,9 @@ class Literal(Number):
 
     def copy(self) -> "Literal":
         return Literal(self.value, self.ast)
+
+    def extract_dice(self) -> Sequence[Die]:
+        return []
 
 
 class ASTLiteral(ASTNode):

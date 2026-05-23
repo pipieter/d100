@@ -2,6 +2,8 @@ import math
 from collections.abc import Sequence
 from typing import Callable, Mapping
 
+from d100.ast.die import Die
+
 from .node import ASTNode, Number
 from .operators import BinaryOperator
 from ..context import RollContext
@@ -54,6 +56,9 @@ class BinOp(Number):
 
     def copy(self) -> "BinOp":
         return BinOp(self.left.copy(), self.op, self.right.copy(), self.ast)
+
+    def extract_dice(self) -> Sequence[Die]:
+        return list(self.left.extract_dice()) + list(self.right.extract_dice())
 
 
 class ASTBinOp(ASTNode):

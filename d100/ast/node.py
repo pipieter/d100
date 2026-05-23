@@ -2,6 +2,8 @@ import abc
 from collections.abc import Sequence
 from typing import Self
 
+from .die import Die
+
 from ..context import RollContext
 from ..distribution import Distribution
 
@@ -51,6 +53,11 @@ class Number(abc.ABC):
                 return found
 
         return None
+
+    @abc.abstractmethod
+    def extract_dice(self) -> Sequence[Die]:
+        """Extract all rolled dice in the entire number, including children."""
+        raise NotImplementedError
 
 
 class ASTNode(abc.ABC):
