@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from d100.distribution.calculate import (
+from d100.distribution import (
     ConvolutionDistributionBuilder,
     DiscreteDistributionBuilder,
 )
