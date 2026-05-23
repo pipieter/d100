@@ -1,6 +1,5 @@
 import pytest
 
-import d100.utils as utils
 from d100 import parse
 
 from d100.ast.dice import ASTDice
