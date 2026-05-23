@@ -17,10 +17,6 @@ from .ast.parenthetical import ASTParenthetical
 from .ast.unop import ASTUnOp
 from .errors import RollSyntaxError
 
-# ===== transformer, parser -> ast =====
-
-DiceSize = int | typing.Literal["%"]
-
 
 # noinspection PyMethodMayBeStatic
 class RollTransformer(Transformer[Any, Any]):
