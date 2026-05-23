@@ -45,4 +45,4 @@ def test_context_d20(has_d20: bool, expr: str):
 )
 def test_is_comparison(is_comparison: bool, expr: str):
     tree = parse(expr)
-    assert utils.expression_is_comparison(tree) == is_comparison
+    assert tree.is_comparison == is_comparison
