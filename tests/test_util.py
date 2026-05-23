@@ -24,7 +24,7 @@ from d100.ast.dice import ASTDice
 )
 def test_context_d20(has_d20: bool, expr: str):
     tree = parse(expr)
-    d20 = utils.find_d20(tree)
+    d20 = tree.find_d20()
 
     if has_d20:
         assert d20 is not None
