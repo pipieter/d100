@@ -4,12 +4,12 @@ import dataclasses
 import random
 from typing import Optional
 
-from .stringifier import SimpleStringifier, Stringifier
 from . import utils
 from .ast.node import ASTNode, Number
 from .context import RollContext
 from .enums import Advantage, Critical
 from .rand import random_impl
+from .stringifier import SimpleStringifier, Stringifier
 
 
 @dataclasses.dataclass

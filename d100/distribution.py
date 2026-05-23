@@ -1,15 +1,14 @@
 import abc
-from collections import defaultdict
-from collections.abc import Sequence
 import copy
 import itertools
 import math
+from collections import defaultdict
+from collections.abc import Sequence
 from typing import Callable, Iterable, Optional
 
 import numpy as np
 
-from .ast.operators import Selector, Operator
-
+from .ast.operators import Operator, Selector
 from .errors import RollError
 
 

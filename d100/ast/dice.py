@@ -7,7 +7,7 @@ from .die import DiceSize, Die
 from .node import ASTNode, Number
 from .operators import AdvantageCategory, Operator, OperatorCategory, Selector
 from ..context import RollContext
-from ..distribution import Distribution, ConvolutionDistributionBuilder, DiscreteDistributionBuilder
+from ..distribution import ConvolutionDistributionBuilder, DiscreteDistributionBuilder, Distribution
 from ..errors import RollError, RollValueError
 
 
