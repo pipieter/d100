@@ -1,7 +1,9 @@
 import pytest
 
 import d100.utils as utils
-from d100 import diceast as ast, parse
+from d100 import parse
+
+from d100.ast.dice import ASTDice
 
 
 @pytest.mark.parametrize(
@@ -26,7 +28,7 @@ def test_context_d20(has_d20: bool, expr: str):
 
     if has_d20:
         assert d20 is not None
-        assert isinstance(d20, ast.Dice)
+        assert isinstance(d20, ASTDice)
     else:
         assert d20 is None
 
