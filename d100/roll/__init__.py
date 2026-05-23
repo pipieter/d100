@@ -34,7 +34,7 @@ class SingleRollResult:
     @property
     def is_comparison(self) -> bool:
         """Checks if the roll is a top-level comparison."""
-        return utils.expression_is_comparison(self.ast)
+        return self.ast.is_comparison
 
 
 @dataclasses.dataclass

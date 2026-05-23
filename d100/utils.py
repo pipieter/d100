@@ -1,4 +1,3 @@
-
 from d100.ast.literal import ASTLiteral
 from .ast.binop import ASTBinOp
 from .ast.dice import ASTDice, Dice
@@ -89,14 +88,3 @@ def add_adv_operator_to_dice(dice: ASTDice, adv: AdvantageCategory | None, count
 
     dice.operations.append(Operator(adv, [Selector(None, count)]))
     return True
-
-
-def expression_is_comparison(node: ASTNode) -> bool:
-    if isinstance(node, ASTExpression):
-        return expression_is_comparison(node.value)
-    if isinstance(node, ASTParenthetical):
-        return expression_is_comparison(node.value)
-    if isinstance(node, ASTBinOp):
-        return node.op in {">", "<", ">=", "<=", "==", "!="}
-
-    return False
