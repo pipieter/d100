@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 __all__ = ["Critical", "Advantage"]
 
@@ -19,3 +20,5 @@ class Advantage(str, Enum):
     ELVEN_ACCURACY = "elven accuracy"
     @property
     def rolls(self) -> int: ...
+    @property
+    def adv(self) -> Literal["adv", "dis", None]: ...

@@ -1,25 +1,18 @@
 import dataclasses
 import random
 
-from .expression import (
-    BinOp as BinOp,
-    Dice as Dice,
-    Expression as Expression,
-    Literal as Literal,
-    Number as Number,
-    Parenthetical as Parenthetical,
-    RollContext as RollContext,
-    UnOp as UnOp,
-)
+from . import utils as utils
+from .ast.node import ASTNode as ASTNode, Number as Number
+from .context import RollContext as RollContext
+from .enums import Advantage as Advantage, Critical as Critical
+from .rand import random_impl as random_impl
 from .stringifier import SimpleStringifier as SimpleStringifier, Stringifier as Stringifier
-from .. import diceast as ast
-from ..enums import Advantage, Critical
 
 @dataclasses.dataclass
 class SingleRollResult:
     """Holds information of a single roll result."""
 
-    ast: ast.Node
+    ast: ASTNode
     roll: Number
     crit: Critical
     stringifier: Stringifier
@@ -37,7 +30,7 @@ class SingleRollResult:
 class RollResult:
     """Holds information about the result of a roll. This should generally not be constructed manually."""
 
-    ast: ast.Node
+    ast: ASTNode
     roll: SingleRollResult
     rolls: list[SingleRollResult]
     advantage: Advantage
@@ -63,5 +56,5 @@ class Roller:
     def __init__(self, rng: random.Random = ...) -> None: ...
     def seed(self, s: int | float | str | bytes | bytearray | None = None) -> None:
         """Set the seed of the rng."""
-    def roll(self, node: ast.Node, stringifier: Stringifier | None = None, advantage: Advantage = ...) -> RollResult:
+    def roll(self, node: ASTNode, stringifier: Stringifier | None = None, advantage: Advantage = ...) -> RollResult:
         """Rolls the dice."""
