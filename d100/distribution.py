@@ -1,13 +1,347 @@
 import abc
+import copy
 import itertools
+import math
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Callable, Iterable, Optional
 
 import numpy as np
 
-from .distribution import Distribution
-from .. import diceast as ast
-from ..errors import RollError
+from .ast.operators import Operator, Selector
+from .errors import RollError
+
+
+def _combine_dictionaries(
+    a: dict[int, float], b: dict[int, float], func: Callable[[int, int], int]
+) -> dict[int, float]:
+    """Combine two dictionaries by combining their keys pair-wise using a combination function.
+
+    Args:
+        a (dict[int, float]): The first dictionary to merge.
+        b (dict[int, float]): The second dictionary to merge.
+        func (Callable[[int, int], int]): A function to combine keys. This function should return a new valid key.
+
+    Returns:
+        dict[int, float]: The combined dictionary.
+    """
+
+    result = dict[int, float]()
+    for ka, va in a.items():
+        for kb, vb in b.items():
+            key = func(ka, kb)
+            result[key] = result.get(key, 0) + va * vb
+    return result
+
+
+class Distribution(object):
+    _dist: dict[int, float]
+
+    def __init__(self, values: Optional[dict[int, float]] = None):
+        if values:
+            self._dist = copy.deepcopy(values)
+        else:
+            self._dist = {0: 1.0}
+
+    def keys(self) -> Iterable[int]:
+        """Get the possible dice sums of the distribution.
+
+        Returns:
+            Iterable[int]: The possible dice sums of the distribution sorted from lowest to highest.
+        """
+        return list(sorted(list(self._dist.keys())))
+
+    def values(self) -> Iterable[float]:
+        """Get all stored probability values of the distribution.
+
+        Returns:
+            Iterable[float]: The possible probability values of the distribution, in no particular order.
+        """
+        return list(self._dist.values())
+
+    def get(self, key: int) -> float:
+        """Get the probability of a single key.
+
+        Args:
+            key (int): The key to retrieve.
+
+        Returns:
+            float: The stored probability of the key, or zero if the key is not present.
+        """
+
+        return self._dist.get(key, 0)
+
+    def get_at_least(self, key: int) -> float:
+        """Get the probability of getting at least the key.
+
+        Args:
+            key (int): The minimum key to retrieve.
+
+        Returns:
+            float: The probability of getting at least the key, inclusive of the key.
+        """
+        keys = [k for k in self.keys() if k >= key]
+        if len(keys) == 0:
+            return 0
+        return sum(self.get(k) for k in keys)
+
+    def get_at_most(self, key: int) -> float:
+        """Get the probability of getting at most the key.
+
+        Args:
+            key (int): The minimum key to retrieve.
+
+        Returns:
+            float: The probability of getting at most the key, inclusive of the key.
+        """
+        keys = [k for k in self.keys() if k <= key]
+        if len(keys) == 0:
+            return 0
+        return sum(self.get(k) for k in keys)
+
+    def min(self) -> int:
+        """Get the minimum key in the distribution.
+
+        Returns:
+            int: The lowest key in the distribution.
+        """
+
+        return min(self.keys())
+
+    def max(self) -> int:
+        """Get the maximum key in the distribution.
+
+        Returns:
+            int: The highest key in the distribution.
+        """
+        return max(self.keys())
+
+    def mean(self, key_mapping: Optional[Callable[[int], int]] = None) -> float:
+        """Get the mean value of the distribution.
+
+        Args:
+            mapping (Optional[Callable[[int], int]], optional): An optional function to perform on the keys of the distribution. Defaults to None.
+
+        Returns:
+            float: The mean of the distribution.
+        """
+
+        if key_mapping is None:
+            key_mapping = lambda x: x
+        return sum([key_mapping(key) * probability for key, probability in self._dist.items()])
+
+    def stdev(self) -> float:
+        """Get the standard deviation of the distribution.
+
+        Returns:
+            float: The standard deviation of the distribution.
+        """
+        # variance = E(X^2) - E(X)^2
+        # stdev = sqrt(variance)
+        e_x2 = self.mean(key_mapping=lambda x: x**2)
+        ex_2 = self.mean() ** 2
+        return math.sqrt(abs(e_x2 - ex_2))
+
+    def __add__(self, other: "Distribution") -> "Distribution":
+        """Adds two distributions together, e.g. 1d20 + 1d4.
+
+        Args:
+            other (Distribution): The other distribution to add.
+
+        Returns:
+            Distribution: The sum of the two distributions.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: a + b))
+
+    def __sub__(self, other: "Distribution") -> "Distribution":
+        """Subtract two distributions from each other, e.g. 1d20 - 1d4.
+
+        Args:
+            other (Distribution): The other distribution to subtract.
+
+        Returns:
+            Distribution: The difference of the two distributions.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: a - b))
+
+    def __mul__(self, other: "Distribution") -> "Distribution":
+        """Multiply two distributions together, e.g. 1d20 * 1d4.
+
+        Args:
+            other (Distribution): The other distribution to multiply.
+
+        Returns:
+            Distribution: The product of the two distributions.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: a * b))
+
+    def __floordiv__(self, other: "Distribution") -> "Distribution":
+        """Divide two distributions from each other, e.g. 1d20 / 1d4. Note that this is the floor
+        division, and not the true division, as distribution keys need to be integers.
+
+        Args:
+            other (Distribution): The divisor of the division.
+
+        Raises:
+            ZeroDivisionError: When one of the possible keys in the divisor is zero.
+
+        Returns:
+            Distribution: The division of the two distributions.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: a // b))
+
+    def __mod__(self, other: "Distribution") -> "Distribution":
+        """Use the modulo operator on two distributions, e.g. 1d20 % 1d8.
+
+        Args:
+            other (Distribution): The other distribution for the modulo operator.
+
+        Returns:
+            Distribution: The resulting modulo operator.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: a % b))
+
+    def __lt__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the less than operator, e.g. 1d6 < 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting less than comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a < b)))
+
+    def __le__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the less than or equal operator, e.g. 1d6 <= 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting less than or equal comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a <= b)))
+
+    def __gt__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the greater than operator, e.g. 1d6 > 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting greater than comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a > b)))
+
+    def __ge__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the greater or equal than operator, e.g. 1d6 >= 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting greater or equal than comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a >= b)))
+
+    def equals(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the equality operator, e.g. 1d6 == 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison
+
+        Returns:
+            Distribution: The resulting equality comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a == b)))
+
+    def not_equals(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the inequality operator, e.g. 1d6 != 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison
+
+        Returns:
+            Distribution: The resulting inequality comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a != b)))
+
+    def __neg__(self) -> "Distribution":
+        """Negate the values of a distribution.
+
+        Returns:
+            Distribution: The distribution with the signs of all of its keys reversed.
+        """
+        return Distribution({-v: k for v, k in self._dist.items()})
+
+    def advantage(self, count: int = 2) -> "Distribution":
+        """Calculate the advantage of a distribution. This means that for all possible
+        keys in the distribution, a pairwise combination is taken where the highest value
+         is taken.
+
+        Args:
+            count (int, optional): The amount of dice to be rolled for which the highest
+            is taken. For example, if count is three then three dice are rolled and the
+            highest is taken. Defaults to 2.
+
+        Raises:
+            InvalidOperationError: If less than one dice count is given.
+
+        Returns:
+            Distribution: The distribution rolled multiple times, with the highest values
+            taken each time.
+        """
+        if count < 1:
+            raise RollError(f"Rolling with advantage requires at least one roll, instead received {count}.")
+
+        result = copy.copy(self._dist)
+        for _ in range(1, count):
+            result = _combine_dictionaries(result, self._dist, lambda a, b: max(a, b))
+        return Distribution(result)
+
+    def disadvantage(self, count: int = 2) -> "Distribution":
+        """Calculate the disadvantage of a distribution. This means that for all possible
+        keys in the distribution, a pairwise combination is taken where the lowest value
+         is taken.
+
+        Args:
+            count (int, optional): The amount of dice to be rolled for which the lowest
+            is taken. For example, if count is three then three dice are rolled and the
+            lowest is taken. Defaults to 2.
+
+        Raises:
+            InvalidOperationError: If less than one dice count is given.
+
+        Returns:
+            Distribution: The distribution rolled multiple times, with the lowest values
+            taken each time.
+        """
+
+        if count < 1:
+            raise RollError(f"Rolling with disadvantage requires at least one roll, instead received {count}.")
+
+        result = copy.copy(self._dist)
+        for _ in range(1, count):
+            result = _combine_dictionaries(result, self._dist, lambda a, b: min(a, b))
+        return Distribution(result)
+
+    def __copy__(self) -> "Distribution":
+        """Create a copy of the distribution. All values of the other distribution
+        are deep-copied.
+
+        Returns:
+            Distribution: A copy of the distribution.
+        """
+        return Distribution(self._dist)
+
+    def __deepcopy__(self) -> "Distribution":
+        """Creates a deep copy of the distribution.
+
+        Returns:
+            Distribution: A deep copy of the distribution.
+        """
+        return Distribution(copy.deepcopy(self._dist))
 
 
 class AbstractDistributionBuilder(abc.ABC):
@@ -22,12 +356,12 @@ class AbstractDistributionBuilder(abc.ABC):
         """
         ...
 
-    def apply_operation(self, op: ast.Operator) -> None:
+    def apply_operation(self, op: Operator) -> None:
         """Apply a valid operator to the current distribution. This internally  changes the
         state of the builder
 
         Args:
-            op (ast.Operator): The operator to be applied.
+            op (Operator): The operator to be applied.
 
         Raises:
             RollError: When the operation in question is unknown or not supported.
@@ -44,7 +378,7 @@ class AbstractDistributionBuilder(abc.ABC):
         }
 
         operation: str = op.op
-        selectors: list[ast.Selector] = op.sels
+        selectors: list[Selector] = op.sels
 
         if operation not in operation_functions:
             raise RollError(f"Unsupported operator: '{op.op}'")
@@ -52,84 +386,84 @@ class AbstractDistributionBuilder(abc.ABC):
         operation_functions[operation](selectors)
 
     @abc.abstractmethod
-    def apply_mi(self, selectors: list[ast.Selector]) -> None:
+    def apply_mi(self, selectors: list[Selector]) -> None:
         """Apply the minimum operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `mi` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `mi` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_ma(self, selectors: list[ast.Selector]) -> None:
+    def apply_ma(self, selectors: list[Selector]) -> None:
         """Apply the maximum operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `ma` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `ma` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_ro(self, selectors: list[ast.Selector]) -> None:
+    def apply_ro(self, selectors: list[Selector]) -> None:
         """Apply the re-roll once operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `ro` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `ro` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_e(self, selectors: list[ast.Selector]) -> None:
+    def apply_e(self, selectors: list[Selector]) -> None:
         """Apply the explode operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `e` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `e` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_k(self, selectors: list[ast.Selector]) -> None:
+    def apply_k(self, selectors: list[Selector]) -> None:
         """Apply the keep operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `k` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `k` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_p(self, selectors: list[ast.Selector]) -> None:
+    def apply_p(self, selectors: list[Selector]) -> None:
         """Apply the drop operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `p` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `p` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_ra(self, selectors: list[ast.Selector]) -> None:
+    def apply_ra(self, selectors: list[Selector]) -> None:
         """Apply the reroll and add operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `ra` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `ra` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_rr(self, selectors: list[ast.Selector]) -> None:
+    def apply_rr(self, selectors: list[Selector]) -> None:
         """Apply the repeated reroll operator to the builder.
 
         Args:
-            selectors (list[ast.Selector]): A list of valid selectors matching the `rr` operator.
+            selectors (list[Selector]): A list of valid selectors matching the `rr` operator.
         """
         ...
 
     @staticmethod
-    def _matches_selector(value: int, selector: ast.Selector) -> bool:
+    def _matches_selector(value: int, selector: Selector) -> bool:
         """Checks if a given value matches a selector. Only works for selectors that are applied to single elements.
 
         Args:
             value (int): The value to be matched.
-            selector (ast.Selector): The selector used for matching.
+            selector (Selector): The selector used for matching.
 
         Raises:
             RollError: When an invalid selector is given or when a selector is given that applies to a set of elements.
@@ -151,13 +485,13 @@ class AbstractDistributionBuilder(abc.ABC):
         raise RollError(f"Invalid operation found between value '{value}' and '{str(selector)}'")
 
     @staticmethod
-    def _creates_infinite_rr_loop(count: int, sides: int, selector: ast.Selector) -> bool:
+    def _creates_infinite_rr_loop(count: int, sides: int, selector: Selector) -> bool:
         """Check if a selector would cause an infinite loop when matched with the rr modifier.
 
         Args:
             count (int): The amount of dice.
             sides (int): The amount of sides of each die.
-            selector (ast.Selector): The selector used for the rr operation modifier.
+            selector (Selector): The selector used for the rr operation modifier.
 
         Returns:
             bool: Whether the selector would create an infinite loop.
@@ -202,13 +536,13 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
     _sides: int
     _convolution: list[float]
 
-    def __init__(self, count: int, sides: int, operations: list[ast.Operator]) -> None:
+    def __init__(self, count: int, sides: int, operations: Sequence[Operator]) -> None:
         """Create a convolution distribution builder.
 
         Args:
             count (int): The number of dice in the expression.
             sides (int): The sides of the dice in the expression.
-            operations (list[ast.Operator]): A list of operators to be applied to the expression.
+            operations (list[Operator]): A list of operators to be applied to the expression.
         """
         super().__init__()
         self._count = count
@@ -228,11 +562,11 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         return Distribution(dist)
 
     @staticmethod
-    def supports_operation(operation: ast.Operator) -> bool:
+    def supports_operation(operation: Operator) -> bool:
         """Checks if the ConvolutionDistributionBuilder supports an operation.
 
         Args:
-            operation (ast.Operator): The operation to be checked.
+            operation (Operator): The operation to be checked.
 
         Returns:
             bool: Whether the operation is supported.
@@ -243,13 +577,13 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         if operation.op in invalid_operations:
             return False
 
-        categories: list[str] = [sel.cat for sel in operation.sels]  # type: ignore
+        categories = [sel.cat for sel in operation.sels]
         if any(category in invalid_selector_categories for category in categories):
             return False
 
         return True
 
-    def apply_mi(self, selectors: list[ast.Selector]) -> None:
+    def apply_mi(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             if selector.cat not in ["", None]:
                 raise RollError(f"Unsupported selector category for mi: '{selector.cat}'")
@@ -263,7 +597,7 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
                 self._convolution[num] += self._convolution[i]
                 self._convolution[i] = 0
 
-    def apply_ma(self, selectors: list[ast.Selector]) -> None:
+    def apply_ma(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             if selector.cat not in ["", None]:
                 raise RollError(f"Unsupported selector category for ma: '{selector.cat}'")
@@ -273,21 +607,21 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
                 self._convolution[num] += self._convolution[i]
                 self._convolution[i] = 0
 
-    def apply_k(self, selectors: list[ast.Selector]) -> None:
+    def apply_k(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             for i in range(1, len(self._convolution)):
                 if not self._matches_selector(i, selector):
                     self._convolution[0] += self._convolution[i]
                     self._convolution[i] = 0
 
-    def apply_p(self, selectors: list[ast.Selector]) -> None:
+    def apply_p(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             for i in range(1, len(self._convolution)):
                 if self._matches_selector(i, selector):
                     self._convolution[0] += self._convolution[i]
                     self._convolution[i] = 0
 
-    def apply_ro(self, selectors: list[ast.Selector]) -> None:
+    def apply_ro(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             reroll = 1 / self._sides
             odds_rerolling = 0
@@ -304,13 +638,13 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
                 else:
                     self._convolution[i] += odds_rerolling * reroll
 
-    def apply_e(self, selectors: list[ast.Selector]) -> None:
+    def apply_e(self, selectors: list[Selector]) -> None:
         raise RollError(f"Explode operator not supported for ConvolutionDistributionBuilder")
 
-    def apply_ra(self, selectors: list[ast.Selector]) -> None:
+    def apply_ra(self, selectors: list[Selector]) -> None:
         raise RollError(f"Reroll and add operator not supported for ConvolutionDistributionBuilder")
 
-    def apply_rr(self, selectors: list[ast.Selector]) -> None:
+    def apply_rr(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             if self._creates_infinite_rr_loop(self._count, self._sides, selector):
                 raise RollError(
@@ -350,13 +684,13 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
     _sides: int
     _dist: defaultdict[DiscreteKey, float]
 
-    def __init__(self, count: int, sides: int, operations: list[ast.Operator]) -> None:
+    def __init__(self, count: int, sides: int, operations: Sequence[Operator]) -> None:
         """Create a discrete distribution builder.
 
         Args:
             count (int): The number of dice in the expression.
             sides (int): The sides of the dice in the expression.
-            operations (list[ast.Operator]): A list of operators to be applied to the expression.
+            operations (list[Operator]): A list of operators to be applied to the expression.
         """
         super().__init__()
         self._count = count
@@ -409,7 +743,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             new_dist[new_key] += value
         self._dist = new_dist
 
-    def apply_mi(self, selectors: list[ast.Selector]) -> None:
+    def apply_mi(self, selectors: list[Selector]) -> None:
         def apply_mi_to_key(key: DiscreteKey, min_value: int) -> DiscreteKey:
             return tuple([value if value >= selector.num else min_value for value in key])
 
@@ -420,7 +754,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             min_value: int = selector.num
             self._transform_keys(lambda key: apply_mi_to_key(key, min_value))
 
-    def apply_ma(self, selectors: list[ast.Selector]) -> None:
+    def apply_ma(self, selectors: list[Selector]) -> None:
         def apply_ma_to_key(key: DiscreteKey, max_value: int) -> DiscreteKey:
             return tuple([value if value <= selector.num else max_value for value in key])
 
@@ -431,8 +765,8 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             max_value: int = selector.num
             self._transform_keys(lambda key: apply_ma_to_key(key, max_value))
 
-    def apply_k(self, selectors: list[ast.Selector]) -> None:
-        def apply_k_to_key(key: DiscreteKey, selector: ast.Selector) -> DiscreteKey:
+    def apply_k(self, selectors: list[Selector]) -> None:
+        def apply_k_to_key(key: DiscreteKey, selector: Selector) -> DiscreteKey:
             if selector.cat is None:
                 # Keep all values matching exactly selector.num
                 return tuple([p for p in key if p == selector.num])
@@ -462,8 +796,8 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         for selector in selectors:
             self._transform_keys(lambda key: apply_k_to_key(key, selector))
 
-    def apply_p(self, selectors: list[ast.Selector]) -> None:
-        def apply_p_to_key(key: DiscreteKey, selector: ast.Selector) -> DiscreteKey:
+    def apply_p(self, selectors: list[Selector]) -> None:
+        def apply_p_to_key(key: DiscreteKey, selector: Selector) -> DiscreteKey:
             if selector.cat is None:
                 # Drop all values matching exactly selector.num
                 return tuple([p for p in key if p != selector.num])
@@ -493,7 +827,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         for selector in selectors:
             self._transform_keys(lambda key: apply_p_to_key(key, selector))
 
-    def apply_ro(self, selectors: list[ast.Selector]) -> None:
+    def apply_ro(self, selectors: list[Selector]) -> None:
         def get_reroll_dice_possibilities(
             dice: DiscreteKey, sides: int, category: str | None, num: int
         ) -> list[DiscreteKey]:
@@ -557,8 +891,8 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             self._dist = new_dist
 
-    def apply_e(self, selectors: list[ast.Selector]) -> None:
-        def should_explode(selector: ast.Selector, value: int) -> bool:
+    def apply_e(self, selectors: list[Selector]) -> None:
+        def should_explode(selector: Selector, value: int) -> bool:
             if selector.cat is None:
                 return value == selector.num
             if selector.cat == ">":
@@ -570,7 +904,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
         def apply_explode(
             dist: defaultdict[DiscreteKey, float],
-            selector: ast.Selector,
+            selector: Selector,
             base_odds: float,
             base_key: DiscreteKey,
             cutoff: float = 1e-8,
@@ -581,7 +915,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             Args:
                 dist (defaultdict[DiscreteKey, float]): The original distribution
-                selector (ast.Selector): The exploding criteria
+                selector (Selector): The exploding criteria
                 base_odds (float): The base odds of the current distribution. Should be initialized as 1.0.
                 base_key (DiscreteKey): The base key. Should be initialized as ().
                 cutoff (float, optional): The cut-off point after which explode is no longer applied. This is to prevent infinitely long executions. Defaults to 1e-6.
@@ -612,7 +946,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         for selector in selectors:
             self._dist = apply_explode(self._dist, selector, 1.0, ())
 
-    def apply_ra(self, selectors: list[ast.Selector]) -> None:
+    def apply_ra(self, selectors: list[Selector]) -> None:
         for selector in selectors:
             new_dist = defaultdict[DiscreteKey, float](float)
             for key, probability in self._dist.items():
@@ -641,16 +975,16 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             self._dist = new_dist
 
-    def apply_rr(self, selectors: list[ast.Selector]) -> None:
+    def apply_rr(self, selectors: list[Selector]) -> None:
         def get_repeated_reroll_dice_probabilities(
-            dice: DiscreteKey, sides: int, selector: ast.Selector
+            dice: DiscreteKey, sides: int, selector: Selector
         ) -> dict[DiscreteKey, float]:
             """Get the repeated reroll distribution of re-rolling a single key.
 
             Args:
                 dice (DiscreteKey): The key to reroll on.
                 sides (int): The number of sides of the dice.
-                selector (ast.Selector): The selector of the re-roll.
+                selector (Selector): The selector of the re-roll.
 
             Returns:
                 dict[DiscreteKey, float]: A distribution containing the keys and their rerolled values. The total probabilities add up to one.

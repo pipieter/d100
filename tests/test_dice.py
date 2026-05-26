@@ -1,9 +1,11 @@
 import pytest
 
-import d100.diceast as ast
-from d100 import *
+from d100 import roll
+from d100.ast.expression import Expression
+from d100.ast.node import ASTNode
+from d100.enums import Critical
+from d100.errors import RollError, RollSyntaxError, RollValueError, TooManyRolls
 from d100.roll import RollResult
-from d100.roll.expression import Expression
 
 
 def r(e: str):
@@ -28,7 +30,7 @@ def test_rolls_dont_error(expr: str):
     assert isinstance(result, RollResult)
     assert isinstance(result.result, str)
     assert isinstance(result.total, (int, float))
-    assert isinstance(result.ast, ast.Node)
+    assert isinstance(result.ast, ASTNode)
     assert isinstance(result.roll.roll, Expression)
 
 

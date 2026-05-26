@@ -1,6 +1,6 @@
 import abc
 
-from .expression import Number
+from .ast.node import Number
 
 __all__ = ["Stringifier", "SimpleStringifier"]
 

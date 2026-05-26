@@ -1,5 +1,4 @@
 -r ../requirements.txt
 flake8
-hypothesis
 pytest
 pytest-cov

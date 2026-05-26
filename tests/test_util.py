@@ -1,7 +1,7 @@
 import pytest
 
-import d100.utils as utils
-from d100 import diceast as ast, parse
+from d100 import parse
+from d100.ast.dice import ASTDice
 
 
 @pytest.mark.parametrize(
@@ -22,11 +22,11 @@ from d100 import diceast as ast, parse
 )
 def test_context_d20(has_d20: bool, expr: str):
     tree = parse(expr)
-    d20 = utils.find_d20(tree)
+    d20 = tree.find_d20()
 
     if has_d20:
         assert d20 is not None
-        assert isinstance(d20, ast.Dice)
+        assert isinstance(d20, ASTDice)
     else:
         assert d20 is None
 
@@ -43,4 +43,4 @@ def test_context_d20(has_d20: bool, expr: str):
 )
 def test_is_comparison(is_comparison: bool, expr: str):
     tree = parse(expr)
-    assert utils.expression_is_comparison(tree) == is_comparison
+    assert tree.is_comparison == is_comparison

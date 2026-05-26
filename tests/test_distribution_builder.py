@@ -4,19 +4,21 @@ ConvolutionDistributionBuilder and DiscreteDistributionBuilder, have the same
 end distributions.
 """
 
+from collections.abc import Sequence
+
 import pytest
 
-import d100
-from d100.distribution.calculate import (
+from d100.ast.operators import Operator, OperatorCategory, Selector, SelectorCategory
+from d100.distribution import (
     ConvolutionDistributionBuilder,
     DiscreteDistributionBuilder,
 )
 from . import approx
 
 
-def operator(op: str, sel: tuple[str | None, int]):
+def operator(op: OperatorCategory, sel: tuple[SelectorCategory | None, int]):
     cat, num = sel
-    return d100.ast.Operator(op, [d100.ast.Selector(cat, num)])
+    return Operator(op, [Selector(cat, num)])
 
 
 @pytest.mark.parametrize("count", [1, 2, 3, 4])
@@ -45,7 +47,7 @@ def operator(op: str, sel: tuple[str | None, int]):
         [operator("mi", (None, 2)), operator("k", (">", 3))],
     ],
 )
-def test_builders(count: int, sides: int, operators: list[d100.ast.Operator]):
+def test_builders(count: int, sides: int, operators: Sequence[Operator]):
     convolution = ConvolutionDistributionBuilder(count, sides, operators).distribution()
     discrete = DiscreteDistributionBuilder(count, sides, operators).distribution()
 

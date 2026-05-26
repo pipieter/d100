@@ -1,8 +1,13 @@
 import abc
 from typing import Any, Callable, Mapping, Type
 
-from .expression import BinOp, Dice, Die, Expression, Literal, Number, Parenthetical, UnOp
-from .. import diceast as ast
+from .ast.binop import BinOp
+from .ast.dice import Dice, DiceSize, Die
+from .ast.expression import Expression
+from .ast.literal import Literal
+from .ast.node import Number
+from .ast.parenthetical import Parenthetical
+from .ast.unop import UnOp
 
 __all__ = ("Stringifier", "SimpleStringifier")
 
@@ -122,9 +127,9 @@ class SimpleStringifier(Stringifier):
     def _str_dice(self, node: Dice):
         dice = [self._str_die(die, node.size) for die in node.dice]
         operators = "".join(str(op) for op in node.operators)
-        return f"{node.num}d{node.size}{operators} ({', '.join(dice)})"
+        return f"{node.count}d{node.size}{operators} ({', '.join(dice)})"
 
-    def _str_die(self, die: Die, size: ast.DiceSize) -> str:
+    def _str_die(self, die: Die, size: DiceSize) -> str:
         exploded_suffix = "!" if die.exploded else ""
         formatted = f"{die.value}{exploded_suffix}"
 
