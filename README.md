@@ -4,7 +4,7 @@ A fast, powerful, and extensible dice engine for virtual tabletops! This is a fo
 
 ## Key Features
 
-- Quick to start - just use `d10.roll()`!
+- Quick to start - just use `d100.roll()`!
 - Optimized for speed and memory efficiency
 - Highly extensible API for custom behaviour and dice stringification
 - Built-in execution limits against malicious dice expressions
