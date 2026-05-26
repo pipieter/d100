@@ -577,7 +577,7 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         if operation.op in invalid_operations:
             return False
 
-        categories: list[str] = [sel.cat for sel in operation.sels]  # type: ignore
+        categories = [sel.cat for sel in operation.sels]
         if any(category in invalid_selector_categories for category in categories):
             return False
 

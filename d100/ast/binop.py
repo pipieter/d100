@@ -1,14 +1,19 @@
 import math
 from collections.abc import Sequence
-from typing import Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from .dice import ASTDice
-from .die import DiceSize, Die
+from .die import Die
 from .node import ASTNode, Number
 from .operators import BinaryOperator
 from ..context import RollContext
 from ..distribution import Distribution
 from ..errors import RollError, RollValueError
+
+if TYPE_CHECKING:
+    from .die import DiceSize
+else:
+    DiceSize = Any
 
 
 class BinOp(Number):

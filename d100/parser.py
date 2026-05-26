@@ -1,7 +1,7 @@
 import os
 import typing
 from collections.abc import MutableMapping
-from typing import Any, Optional
+from typing import Any, Optional, TypeGuard
 
 import cachetools
 import lark
@@ -12,33 +12,56 @@ from .ast.dice import ASTDice
 from .ast.expression import ASTExpression
 from .ast.literal import ASTLiteral
 from .ast.node import ASTNode
-from .ast.operators import Operator, OperatorCategory, Selector
+from .ast.operators import BinaryOperator, Operator, OperatorCategory, Selector, UnaryOperator
 from .ast.parenthetical import ASTParenthetical
 from .ast.unop import ASTUnOp
-from .errors import RollSyntaxError
+from .errors import RollError, RollSyntaxError
 
 
-# noinspection PyMethodMayBeStatic
 class RollTransformer(Transformer[Any, Any]):
+    def _is_unop(self, op: Token | str) -> TypeGuard[UnaryOperator]:
+        op = str(op)
+        return op in typing.get_args(UnaryOperator)
+
+    def _is_binop(self, op: Token | str) -> TypeGuard[BinaryOperator]:
+        op = str(op)
+        return op in typing.get_args(BinaryOperator)
+
     def expr(self, expr: tuple[ASTNode]) -> ASTExpression:
         (value,) = expr
         return ASTExpression(value)
 
     def comparison(self, binop: tuple[ASTNode, Token, ASTNode]) -> ASTBinOp:
         left, op, right = binop
-        return ASTBinOp(left, str(op), right)  # type: ignore
+
+        if not self._is_binop(op):
+            raise RollError(f"Invalid binary operator: '{op}'")
+
+        return ASTBinOp(left, op, right)
 
     def a_num(self, binop: tuple[ASTNode, Token, ASTNode]) -> ASTBinOp:
         left, op, right = binop
-        return ASTBinOp(left, str(op), right)  # type: ignore
+
+        if not self._is_binop(op):
+            raise RollError(f"Invalid binary operator: '{op}'")
+
+        return ASTBinOp(left, op, right)
 
     def m_num(self, binop: tuple[ASTNode, Token, ASTNode]) -> ASTBinOp:
         left, op, right = binop
-        return ASTBinOp(left, str(op), right)  # type: ignore
+
+        if not self._is_binop(op):
+            raise RollError(f"Invalid binary operator: '{op}'")
+
+        return ASTBinOp(left, op, right)
 
     def u_num(self, unop: tuple[Token, ASTNode]) -> ASTUnOp:
         op, value = unop
-        return ASTUnOp(str(op), value)  # type: ignore
+
+        if not self._is_unop(op):
+            raise RollError(f"Invalid unary operator: '{op}'")
+
+        return ASTUnOp(op, value)
 
     def literal(self, literal: tuple[Token]) -> ASTLiteral:
         (value,) = literal
