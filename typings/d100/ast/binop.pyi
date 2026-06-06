@@ -1,8 +1,8 @@
 from collections.abc import Sequence
 from typing import Callable, Mapping
 
-from d100.ast.dice import ASTDice as ASTDice
-from d100.ast.die import DiceSize as DiceSize, Die as Die
+from .dice import ASTDice as ASTDice
+from .die import DiceSize as DiceSize, Die as Die
 from .node import ASTNode as ASTNode, Number as Number
 from .operators import BinaryOperator as BinaryOperator
 from ..context import RollContext as RollContext
