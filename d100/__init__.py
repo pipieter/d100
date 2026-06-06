@@ -20,11 +20,9 @@ def parse(expr: str | ASTExpression) -> ASTExpression:
     return expr
 
 
-def roll(
-    expr: str | ASTExpression, stringifier: Stringifier | None = None, advantage: Advantage = Advantage.NONE
-) -> RollResult:
+def roll(expr: str | ASTExpression, stringifier: Stringifier | None = None) -> RollResult:
     tree = parse(expr)
-    return _roller.roll(tree, stringifier, advantage)
+    return _roller.roll(tree, stringifier)
 
 
 def seed(s: int | float | str | bytes | bytearray | None = None) -> None:

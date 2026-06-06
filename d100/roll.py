@@ -7,7 +7,7 @@ from typing import Optional
 from . import utils
 from .ast.node import ASTNode, Number
 from .context import RollContext
-from .enums import Advantage, Critical
+from .enums import Critical
 from .rand import random_impl
 from .stringifier import SimpleStringifier, Stringifier
 
@@ -44,7 +44,6 @@ class RollResult:
     ast: ASTNode
     roll: SingleRollResult
     rolls: list[SingleRollResult]
-    advantage: Advantage
     stringifier: Stringifier
     warnings: list[str]
 
@@ -87,16 +86,8 @@ class Roller:
         """Set the seed of the rng."""
         self._rng.seed(s)
 
-    def roll(
-        self,
-        node: ASTNode,
-        stringifier: Optional[Stringifier] = None,
-        advantage: Advantage = Advantage.NONE,
-    ) -> RollResult:
+    def roll(self, node: ASTNode, stringifier: Optional[Stringifier] = None) -> RollResult:
         """Rolls the dice."""
-
-        # It's possible for the node to be edited for advantage, so a copy is made
-        node = node.copy()
 
         if stringifier is None:
             stringifier = SimpleStringifier()
@@ -104,14 +95,6 @@ class Roller:
         d20 = node.find_d20()
         context = RollContext(self._rng)
         warnings: list[str] = []
-
-        # Add the advantage operator
-        if advantage != Advantage.NONE:
-            if d20 is None:
-                warnings.append(f"Rolled with {advantage.value}, but expression did not contain a valid d20.")
-            else:
-                if not utils.add_adv_operator_to_dice(d20, advantage.adv, advantage.rolls):
-                    warnings.append(f"The d20 in the expression already had an advantage operator.")
 
         # Roll the actual die
         roll, rolls = node.roll(context)
@@ -136,7 +119,6 @@ class Roller:
             ast=node,
             roll=result,
             rolls=results,
-            advantage=advantage,
             stringifier=stringifier,
             warnings=warnings,
         )

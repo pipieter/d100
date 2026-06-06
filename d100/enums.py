@@ -1,7 +1,6 @@
 from enum import Enum
-from typing import Literal
 
-__all__ = ("Critical", "Advantage")
+__all__ = ("Critical",)
 
 
 class Critical(str, Enum):
@@ -11,32 +10,3 @@ class Critical(str, Enum):
     CRIT = "crit"
     FAIL = "fail"
     DIRTY = "dirty"
-
-
-class Advantage(str, Enum):
-    """Enumeration representing at what advantage a roll should be made at."""
-
-    NONE = "none"
-    ADVANTAGE = "advantage"
-    DISADVANTAGE = "disadvantage"
-    ELVEN_ACCURACY = "elven accuracy"
-
-    @property
-    def rolls(self) -> int:
-        match self.value:
-            case self.ADVANTAGE.value | self.DISADVANTAGE.value:
-                return 2
-            case self.ELVEN_ACCURACY.value:
-                return 3
-            case self.NONE.value:
-                return 1
-
-    @property
-    def adv(self) -> Literal["adv", "dis", None]:
-        match self.value:
-            case self.ADVANTAGE.value | self.ELVEN_ACCURACY.value:
-                return "adv"
-            case self.DISADVANTAGE.value:
-                return "dis"
-            case self.NONE.value:
-                return None

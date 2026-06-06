@@ -1,7 +1,9 @@
 from .ast.dice import ASTDice, Dice
+from .ast.expression import ASTExpression
 from .ast.node import Number
 from .ast.operators import AdvantageCategory, Operator, Selector
 from .enums import Critical
+from .errors import RollError
 
 
 def determine_crit_type(root: Number, d20: Number | None) -> Critical:
@@ -25,14 +27,42 @@ def determine_crit_type(root: Number, d20: Number | None) -> Critical:
     return Critical.NONE
 
 
-def add_adv_operator_to_dice(dice: ASTDice, adv: AdvantageCategory | None, count: int) -> bool:
-    if adv is None:
-        return True
-
+def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
     # Check if the dice already has adv or dis
-    for operator in dice.operations:
+    for operator in d20.operations:
         if operator.op in ["adv", "dis"]:
             return False
 
-    dice.operations.append(Operator(adv, [Selector(None, count)]))
+    d20.operations.append(Operator(adv, [Selector(None, count)]))
     return True
+
+
+def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCategory, count: int) -> ASTExpression:
+    """
+    Add advantage to the d20 in an expression. This does not add advantage to
+    the whole expression, rather it searches for the first (viable) d20 in the
+    expression and adds advantage to that dice, if it doesn't already have it.
+
+    Args:
+        expr (ASTExpression): The expression to add it in.
+        adv (AdvantageCategory): The advantage to add. Either 'adv' or 'dis'.
+        count (int): The amount of times to roll.
+
+    Raises:
+        RollError: In case advantage could not be added.
+
+    Returns:
+        ASTExpression: The resulting expression with the advantage.
+    """
+
+    expr = expr.copy()  # Don't modify the original expression
+
+    d20 = expr.find_d20()
+
+    if d20 is None:
+        raise RollError("Could not find a valid d20 to add advantage to.")
+
+    if not _add_adv_operator(d20, adv, count):
+        raise RollError(f"Could not add advantage to expression.")
+
+    return expr

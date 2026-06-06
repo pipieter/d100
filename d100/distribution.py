@@ -297,7 +297,7 @@ class Distribution(object):
 
         result = copy.copy(self._dist)
         for _ in range(1, count):
-            result = _combine_dictionaries(result, self._dist, lambda a, b: max(a, b))
+            result = _combine_dictionaries(result, self._dist, max)
         return Distribution(result)
 
     def disadvantage(self, count: int = 2) -> "Distribution":
@@ -323,7 +323,7 @@ class Distribution(object):
 
         result = copy.copy(self._dist)
         for _ in range(1, count):
-            result = _combine_dictionaries(result, self._dist, lambda a, b: min(a, b))
+            result = _combine_dictionaries(result, self._dist, min)
         return Distribution(result)
 
     def __copy__(self) -> "Distribution":
