@@ -306,6 +306,20 @@ class AbstractDistributionBuilder(abc.ABC, metaclass=abc.ABCMeta):
         Args:
             selectors (list[Selector]): A list of valid selectors matching the `rr` operator.
         """
+    @abc.abstractmethod
+    def apply_adv(self, selectors: list[Selector]) -> None:
+        """Apply the advantage operator to the builder.
+
+        Args:
+            selectors (list[Selector]): A list of valid selectors matching the `adv` operator.
+        """
+    @abc.abstractmethod
+    def apply_dis(self, selectors: list[Selector]) -> None:
+        """Apply the disadvantage operator to the builder.
+
+        Args:
+            selectors (list[Selector]): A list of valid selectors matching the `dis` operator.
+        """
 
 class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
     """
@@ -348,6 +362,8 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
     def apply_e(self, selectors: list[Selector]) -> None: ...
     def apply_ra(self, selectors: list[Selector]) -> None: ...
     def apply_rr(self, selectors: list[Selector]) -> None: ...
+    def apply_adv(self, selectors: list[Selector]) -> None: ...
+    def apply_dis(self, selectors: list[Selector]) -> None: ...
 
 DiscreteKey = tuple[int, ...]
 
@@ -369,3 +385,5 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
     def apply_e(self, selectors: list[Selector]) -> None: ...
     def apply_ra(self, selectors: list[Selector]) -> None: ...
     def apply_rr(self, selectors: list[Selector]) -> None: ...
+    def apply_adv(self, selectors: list[Selector]) -> None: ...
+    def apply_dis(self, selectors: list[Selector]) -> None: ...

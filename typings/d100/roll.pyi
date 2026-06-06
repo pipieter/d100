@@ -4,7 +4,7 @@ import random
 from . import utils as utils
 from .ast.node import ASTNode as ASTNode, Number as Number
 from .context import RollContext as RollContext
-from .enums import Advantage as Advantage, Critical as Critical
+from .enums import Critical as Critical
 from .rand import random_impl as random_impl
 from .stringifier import SimpleStringifier as SimpleStringifier, Stringifier as Stringifier
 
@@ -33,7 +33,6 @@ class RollResult:
     ast: ASTNode
     roll: SingleRollResult
     rolls: list[SingleRollResult]
-    advantage: Advantage
     stringifier: Stringifier
     warnings: list[str]
     @property
@@ -56,5 +55,5 @@ class Roller:
     def __init__(self, rng: random.Random = ...) -> None: ...
     def seed(self, s: int | float | str | bytes | bytearray | None = None) -> None:
         """Set the seed of the rng."""
-    def roll(self, node: ASTNode, stringifier: Stringifier | None = None, advantage: Advantage = ...) -> RollResult:
+    def roll(self, node: ASTNode, stringifier: Stringifier | None = None) -> RollResult:
         """Rolls the dice."""

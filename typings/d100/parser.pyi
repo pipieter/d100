@@ -7,10 +7,16 @@ from .ast.dice import ASTDice as ASTDice
 from .ast.expression import ASTExpression as ASTExpression
 from .ast.literal import ASTLiteral as ASTLiteral
 from .ast.node import ASTNode as ASTNode
-from .ast.operators import Operator as Operator, OperatorCategory as OperatorCategory, Selector as Selector
+from .ast.operators import (
+    BinaryOperator as BinaryOperator,
+    Operator as Operator,
+    OperatorCategory as OperatorCategory,
+    Selector as Selector,
+    UnaryOperator as UnaryOperator,
+)
 from .ast.parenthetical import ASTParenthetical as ASTParenthetical
 from .ast.unop import ASTUnOp as ASTUnOp
-from .errors import RollSyntaxError as RollSyntaxError
+from .errors import RollError as RollError, RollSyntaxError as RollSyntaxError
 
 class RollTransformer(Transformer[Any, Any]):
     def expr(self, expr: tuple[ASTNode]) -> ASTExpression: ...
