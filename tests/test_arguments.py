@@ -1,11 +1,10 @@
 from typing import Literal
 
-from d100 import parse, roll, utils
 import pytest
 
-from d100.errors import RollError
-
+from d100 import parse, roll, utils
 from d100.ast.expression import ASTExpression
+from d100.errors import RollError
 
 
 def test_advantage_d20():
@@ -81,7 +80,7 @@ def test_advantage_roll_count(rolls: int | Literal[False], expr: str | ASTExpres
         assert r.total == max(rr.total for rr in r.rolls)
 
 
-@pytest.mark.parametrize("expr", [("1d20adv"), ("1d20dis"), ("1d6+1d20adv")])
+@pytest.mark.parametrize("expr", ["1d20adv", "1d20dis", "1d6+1d20adv"])
 def test_advantage_to_already_existing_fails(expr: str | ASTExpression):
     # if advantage is requested for an expression that already has advantage, a warning is thrown
     with pytest.raises(RollError):
