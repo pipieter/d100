@@ -375,6 +375,8 @@ class AbstractDistributionBuilder(abc.ABC):
             "p": self.apply_p,
             "ra": self.apply_ra,
             "rr": self.apply_rr,
+            "adv": self.apply_adv,
+            "dis": self.apply_dis,
         }
 
         operation: str = op.op
@@ -454,6 +456,24 @@ class AbstractDistributionBuilder(abc.ABC):
 
         Args:
             selectors (list[Selector]): A list of valid selectors matching the `rr` operator.
+        """
+        ...
+
+    @abc.abstractmethod
+    def apply_adv(self, selectors: list[Selector]) -> None:
+        """Apply the advantage operator to the builder.
+
+        Args:
+            selectors (list[Selector]): A list of valid selectors matching the `adv` operator.
+        """
+        ...
+
+    @abc.abstractmethod
+    def apply_dis(self, selectors: list[Selector]) -> None:
+        """Apply the disadvantage operator to the builder.
+
+        Args:
+            selectors (list[Selector]): A list of valid selectors matching the `dis` operator.
         """
         ...
 
@@ -571,7 +591,7 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         Returns:
             bool: Whether the operation is supported.
         """
-        invalid_operations = ["e", "ra"]
+        invalid_operations = ["e", "ra", "adv", "dis"]
         invalid_selector_categories = ["h", "l"]
 
         if operation.op in invalid_operations:
@@ -673,6 +693,12 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
                 self._convolution[value] = 0
             for value in target_values:
                 self._convolution[value] += probability_per_target
+
+    def apply_adv(self, selectors: list[Selector]) -> None:
+        raise RollError(f"Advantage operator not supported for ConvolutionDistributionBuilder")
+
+    def apply_dis(self, selectors: list[Selector]) -> None:
+        raise RollError(f"Disadvantage operator not supported for ConvolutionDistributionBuilder")
 
 
 # Internal representation of a discrete key, which is a tuple of ints
@@ -1038,3 +1064,47 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
                     new_dist[new_key] += probability * sub_probability
 
             self._dist = new_dist
+
+    def _validate_adv_selectors(self, name: str, selectors: list[Selector]) -> list[Selector]:
+        if len(selectors) == 0:
+            # if no selectors are given, the user most likely meant the '2' selector,
+            # e.g. 1d20adv -> 1d20adv2
+            return [Selector(None, 2)]
+
+        for selector in selectors:
+            if selector.cat is not None:
+                raise RollError(f"Invalid {name} modifier selector '{selector.cat}'.")
+
+            if selector.num < 1:
+                raise RollError(f"{name.capitalize()} number must be at least one.")
+        return [*selectors]
+
+    def _apply_adv_operator(
+        self,
+        dist: defaultdict[DiscreteKey, float],
+        selector: Selector,
+        op: Callable[[int, int], bool],
+    ) -> None:
+        for _ in range(1, selector.num):
+            new_dist = defaultdict[DiscreteKey, float](float)
+            for k1, v1 in self._dist.items():
+                for k2, v2 in dist.items():
+                    k = k1 if op(sum(k1), sum(k2)) else k2
+                    v = v1 * v2
+                    new_dist[k] += v
+
+            self._dist = new_dist
+
+    def apply_adv(self, selectors: list[Selector]) -> None:
+        selectors = self._validate_adv_selectors("advantage", selectors)
+        original = self._dist.copy()
+
+        for selector in selectors:
+            self._apply_adv_operator(original, selector, lambda a, b: a > b)
+
+    def apply_dis(self, selectors: list[Selector]) -> None:
+        selectors = self._validate_adv_selectors("disadvantage", selectors)
+        original = self._dist.copy()
+
+        for selector in selectors:
+            self._apply_adv_operator(original, selector, lambda a, b: a < b)
