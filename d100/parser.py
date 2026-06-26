@@ -7,6 +7,8 @@ import cachetools
 import lark
 from lark import Lark, Token, Transformer
 
+from .ast.unevaluated import ASTUnevaluated
+
 from .ast.binop import ASTBinOp
 from .ast.dice import ASTDice
 from .ast.expression import ASTExpression
@@ -93,6 +95,9 @@ class RollTransformer(Transformer[Any, Any]):
     def num_selector(self, sel: Any) -> Selector:
         return Selector(None, *sel)
 
+    def unevaluated(self, unevaluated: str) -> ASTUnevaluated:
+        return ASTUnevaluated(unevaluated)
+
 
 class Parser:
     _lark: Lark
@@ -130,9 +135,9 @@ class Parser:
                 self._cache[clean_expr] = dice_tree
             return dice_tree
         except lark.UnexpectedToken as ut:
-            raise RollSyntaxError(ut.line, ut.column, ut.token, ut.expected)
+            raise RollSyntaxError.from_unexpected(ut.line, ut.column, ut.token, ut.expected)
         except lark.UnexpectedCharacters as uc:
-            raise RollSyntaxError(uc.line, uc.column, expr[uc.pos_in_stream], uc.allowed)
+            raise RollSyntaxError.from_unexpected(uc.line, uc.column, expr[uc.pos_in_stream], uc.allowed)
 
 
 if __name__ == "__main__":

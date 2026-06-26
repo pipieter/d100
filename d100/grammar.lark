@@ -18,15 +18,14 @@ M_OP: "*" | "//" | "/" | "%"
 U_OP: "+" | "-"
 
 // numbers
-?num_expr: (parenthetical | dice | literal)
-
-literal: INTEGER | DECIMAL
+?num_expr: (parenthetical | dice | literal | unevaluated)
 
 parenthetical: "(" _WS? num _WS? ")"
+?dice: dice_expr dice_op*
+literal: INTEGER | DECIMAL
+unevaluated: (LETTER | DIGIT)+
 
 // dice
-?dice: dice_expr dice_op*
-
 dice_op: ((DICE_OPERATOR | SET_OPERATOR) selector) | EXPRESSION_OPERATOR | (ADVANTAGE_OPERATOR num_selector?)
 SET_OPERATOR: "k" | "p"
 DICE_OPERATOR: "rr" | "ro" | "ra" | "e" | "mi" | "ma" | "rs"
@@ -48,3 +47,5 @@ _WS: /[ \t\f\r\n]/+
 // useful constants
 %import common.INT -> INTEGER
 %import common.DECIMAL
+%import common.LETTER
+%import common.DIGIT
