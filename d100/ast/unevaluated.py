@@ -23,7 +23,7 @@ class ASTUnevaluated(ASTNode):
         return ASTUnevaluated(self.value)
 
     def __str__(self) -> str:
-        return self.value
+        return str(self.value)
 
     @property
     def children(self) -> Sequence[ASTNode]:

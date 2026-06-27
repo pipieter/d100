@@ -20,7 +20,43 @@ from .ast.unop import ASTUnOp
 from .errors import RollError, RollSyntaxError
 
 
-class RollTransformer(Transformer[Any, Any]):
+class DiceTransformer(Transformer[Any, Any]):
+    def expr(self, expr: tuple[Any, ...]) -> ASTLiteral | ASTDice:
+        (value,) = expr
+        if hasattr(value, "type") and value.type == "INT":
+            return ASTLiteral(int(str(value)))
+
+        if hasattr(value, "type") and value.type == "DECIMAL":
+            return ASTLiteral(float(str(value)))
+
+        return value
+
+    def dice(self, opdice: Any) -> ASTDice:
+        dice, *operations = opdice
+        return ASTDice(dice.num, dice.size, *operations)
+
+    def dice_operator(self, opsel: tuple[OperatorCategory, Optional[Selector]]) -> Operator:
+        return Operator.new(*opsel)
+
+    def dice_expr(self, dice: Any) -> ASTDice:
+        if len(dice) == 1:
+            return ASTDice(1, *dice)
+        return ASTDice(*dice)
+
+    def selector(self, sel: Any) -> Selector:
+        return Selector(*sel)
+
+    def num_selector(self, sel: Any) -> Selector:
+        return Selector(None, *sel)
+
+
+class ExpressionTransformer(Transformer[Any, Any]):
+    _dice_grammar: Lark
+
+    def __init__(self, dice_grammar: Lark) -> None:
+        super().__init__(visit_tokens=True)
+        self._dice_grammar = dice_grammar
+
     def _is_unop(self, op: Token | str) -> TypeGuard[UnaryOperator]:
         op = str(op)
         return op in typing.get_args(UnaryOperator)
@@ -65,35 +101,25 @@ class RollTransformer(Transformer[Any, Any]):
 
         return ASTUnOp(op, value)
 
-    def literal(self, literal: tuple[Token]) -> ASTLiteral:
-        (value,) = literal
-        if value.type == "INTEGER":
-            return ASTLiteral(int(value))
-        if value.type == "DECIMAL":
-            return ASTLiteral(float(value))
-
-        raise SyntaxError(f"Unsupported literal type {value.type}")
-
     def parenthetical(self, num: Any) -> ASTParenthetical:
         return ASTParenthetical(*num)
 
-    def dice(self, opdice: Any) -> ASTDice:
-        dice, *operations = opdice
-        return ASTDice(dice.num, dice.size, *operations)
+    def value(self, token: tuple[Token]) -> ASTLiteral | ASTDice | ASTUnevaluated:
+        (value,) = token
+        if value.type == "INT":
+            return ASTLiteral(int(value))
 
-    def dice_op(self, opsel: tuple[OperatorCategory, Optional[Selector]]) -> Operator:
-        return Operator.new(*opsel)
+        if value.type == "DECIMAL":
+            return ASTLiteral(float(value))
 
-    def dice_expr(self, dice: Any) -> ASTDice:
-        if len(dice) == 1:
-            return ASTDice(1, *dice)
-        return ASTDice(*dice)
+        # If it's not an int or a float, it's string and a potential dice expression
+        value = str(value)
 
-    def selector(self, sel: Any) -> Selector:
-        return Selector(*sel)
-
-    def num_selector(self, sel: Any) -> Selector:
-        return Selector(None, *sel)
+        try:
+            return self._dice_grammar.parse(value, start="expr")  # type: ignore
+        except:
+            # If the expression could not have been parsed as a dice, it must non-evaluatable
+            return ASTUnevaluated(value)
 
     def unevaluated(self, unevaluated: str) -> ASTUnevaluated:
         return ASTUnevaluated(unevaluated)
@@ -102,19 +128,32 @@ class RollTransformer(Transformer[Any, Any]):
 class Parser:
     _lark: Lark
     _cache: MutableMapping[str, ASTExpression]
-    _transformer: RollTransformer
+    _dice_transformer: DiceTransformer
+    _expression_transformer: ExpressionTransformer
 
-    def __init__(self, grammar_path: str) -> None:
-        with open(grammar_path, "r") as grammar_file:
-            grammar = grammar_file.read()
+    def __init__(self, dice_grammar_path: str, expression_grammar_path: str) -> None:
+        with open(dice_grammar_path, "r") as dice_grammar_file:
+            dice_grammar = dice_grammar_file.read()
 
-        self._transformer = RollTransformer()
-        self._cache = cachetools.LFUCache(256)
-        self._lark = Lark(
-            grammar,
+        with open(expression_grammar_path, "r") as expression_grammar_file:
+            expression_grammar = expression_grammar_file.read()
+
+        self._dice_transformer = DiceTransformer()
+        self._dice_lark = Lark(
+            dice_grammar,
             start=["expr"],
             parser="lalr",
-            transformer=self._transformer,
+            transformer=self._dice_transformer,
+            maybe_placeholders=True,
+        )
+
+        self._expression_transformer = ExpressionTransformer(self._dice_lark)
+        self._cache = cachetools.LFUCache(256)
+        self._lark = Lark(
+            expression_grammar,
+            start=["expr"],
+            parser="lalr",
+            transformer=self._expression_transformer,
             maybe_placeholders=True,
         )
 
@@ -141,8 +180,9 @@ class Parser:
 
 
 if __name__ == "__main__":
-    grammar_path = os.path.join(os.path.dirname(__file__), "grammar.lark")
-    parser = Parser(grammar_path)
+    dice_grammar_path = os.path.join(os.path.dirname(__file__), "lark", "dice.lark")
+    expression_grammar_path = os.path.join(os.path.dirname(__file__), "lark", "expression.lark")
+    parser = Parser(dice_grammar_path=dice_grammar_path, expression_grammar_path=expression_grammar_path)
 
     while True:
         expr = parser.parse(input("> "), start="expr")

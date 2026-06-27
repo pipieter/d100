@@ -1,0 +1,23 @@
+// Dice grammar
+expr: INT | DECIMAL | dice
+
+// Selectors
+SELECTOR_CATEGORY: "l" | "h" | "<" | ">"
+num_selector: INT
+selector: [SELECTOR_CATEGORY] INT
+
+// Operators
+DICE_OPERATOR: "rr" | "ro" | "ra" | "e" | "mi" | "ma" | "rs"
+SET_OPERATOR: "k" | "p"
+ADVANTAGE_OPERATOR: "adv" | "dis"
+EXPRESSION_OPERATOR: "red"
+
+// Dice
+DICE_SIZE: INT | "%"
+
+dice_operator: ((DICE_OPERATOR | SET_OPERATOR) selector) | EXPRESSION_OPERATOR | (ADVANTAGE_OPERATOR num_selector?)
+dice_expr: INT? "d" DICE_SIZE
+?dice: dice_expr dice_operator*
+
+%import common.INT
+%import common.DECIMAL

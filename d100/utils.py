@@ -1,7 +1,7 @@
 from .ast.dice import ASTDice, Dice
 from .ast.expression import ASTExpression
 from .ast.node import Number
-from .ast.operators import AdvantageCategory, Operator, Selector
+from .ast.operators import AdvantageOperator, Operator, Selector
 from .enums import Critical
 from .errors import RollError
 
@@ -27,7 +27,7 @@ def determine_crit_type(root: Number, d20: Number | None) -> Critical:
     return Critical.NONE
 
 
-def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
+def _add_adv_operator(d20: ASTDice, adv: AdvantageOperator, count: int) -> bool:
     # Check if the dice already has adv or dis
     for operator in d20.operations:
         if operator.op in ["adv", "dis"]:
@@ -37,7 +37,7 @@ def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
     return True
 
 
-def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCategory, count: int) -> ASTExpression:
+def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageOperator, count: int) -> ASTExpression:
     """
     Add advantage to the d20 in an expression. This does not add advantage to
     the whole expression, rather it searches for the first (viable) d20 in the
