@@ -1,15 +1,11 @@
-
 from collections.abc import Sequence
 from typing import Literal
 
-from ..errors import RollSyntaxError
-
 from .dice import ASTDice
-from .node import Number
+from .node import ASTNode, Number
 from ..context import RollContext
 from ..distribution import Distribution
-
-from .node import ASTNode
+from ..errors import RollSyntaxError
 
 
 class ASTUnevaluated(ASTNode):
@@ -39,5 +35,5 @@ class ASTUnevaluated(ASTNode):
     def is_comparison(self) -> bool:
         return False
 
-    def find_dice(self, count: int, size: int | Literal['%']) -> ASTDice | None:
+    def find_dice(self, count: int, size: int | Literal["%"]) -> ASTDice | None:
         return None

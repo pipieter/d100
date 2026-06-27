@@ -1,9 +1,8 @@
-from d100 import parse
 import pytest
 
-from d100.errors import RollSyntaxError
-
+from d100 import parse
 from d100.ast.unevaluated import ASTUnevaluated
+from d100.errors import RollSyntaxError
 
 
 @pytest.mark.parametrize("expr", ["1d20abc", "xyz", "1d4 * 100gp", "x + y"])

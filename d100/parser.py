@@ -7,8 +7,6 @@ import cachetools
 import lark
 from lark import Lark, Token, Transformer
 
-from .ast.unevaluated import ASTUnevaluated
-
 from .ast.binop import ASTBinOp
 from .ast.dice import ASTDice
 from .ast.expression import ASTExpression
@@ -16,6 +14,7 @@ from .ast.literal import ASTLiteral
 from .ast.node import ASTNode
 from .ast.operators import BinaryOperator, Operator, OperatorCategory, Selector, UnaryOperator
 from .ast.parenthetical import ASTParenthetical
+from .ast.unevaluated import ASTUnevaluated
 from .ast.unop import ASTUnOp
 from .errors import RollError, RollSyntaxError
 
