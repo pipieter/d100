@@ -15,7 +15,7 @@ class RollSyntaxError(RollError):
     """Syntax error happened while parsing roll."""
 
     @staticmethod
-    def from_unexpected(line: int, col: int, got: Any, expected: Any):
+    def from_unexpected(line: int, col: int, got: Any, expected: Any) -> "RollSyntaxError":
         msg = (
             f"Unexpected input on line {line}, col {col}: expected {', '.join([str(ex) for ex in expected])}, "
             f"got {str(got)}"
