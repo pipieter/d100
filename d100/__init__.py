@@ -1,7 +1,6 @@
 import os
 
 from .ast.expression import ASTExpression
-from .ast.unevaluated import ASTUnevaluated
 from .distribution import Distribution
 from .enums import *
 from .errors import *
@@ -10,22 +9,14 @@ from .rand import random_impl
 from .roll import Roller, RollResult
 from .stringifier import Stringifier
 
-_dice_grammar_path = os.path.join(os.path.dirname(__file__), "lark", "dice.lark")
-_expression_grammar_path = os.path.join(os.path.dirname(__file__), "lark", "expression.lark")
-
-_parser = Parser(dice_grammar_path=_dice_grammar_path, expression_grammar_path=_expression_grammar_path)
+_grammar_path = os.path.join(os.path.dirname(__file__), "grammar.lark")
+_parser = Parser(_grammar_path)
 _roller = Roller(random_impl)
 
 
-def parse(expr: str | ASTExpression, allow_unevaluated: bool = False) -> ASTExpression:
+def parse(expr: str | ASTExpression) -> ASTExpression:
     if isinstance(expr, str):
-        expr = _parser.parse(expr)
-
-    if not allow_unevaluated:
-        unevaluated = [node for node in expr.flatten() if isinstance(node, ASTUnevaluated)]
-        if unevaluated:
-            raise RollSyntaxError(f"Unevaluated node '{str(unevaluated[0])}' found in expression '{str(expr)}'")
-
+        return _parser.parse(expr)
     return expr
 
 
