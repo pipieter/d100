@@ -106,3 +106,7 @@ class ASTNode(abc.ABC):
 
     def find_d20(self) -> ASTDice | None:
         return self.find_dice(1, 20)
+
+    def flatten(self) -> list["ASTNode"]:
+        children = [flattened_child for child in self.children for flattened_child in child.flatten()]
+        return [self, *children]

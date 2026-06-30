@@ -1,7 +1,5 @@
 from typing import Any
 
-from _typeshed import Incomplete
-
 __all__ = ["RollError", "RollSyntaxError", "RollValueError", "TooManyRolls"]
 
 class RollError(Exception):
@@ -12,11 +10,8 @@ class RollError(Exception):
 class RollSyntaxError(RollError):
     """Syntax error happened while parsing roll."""
 
-    line: Incomplete
-    col: Incomplete
-    got: Incomplete
-    expected: Incomplete
-    def __init__(self, line: int, col: int, got: Any, expected: Any) -> None: ...
+    @staticmethod
+    def from_unexpected(line: int, col: int, got: Any, expected: Any) -> RollSyntaxError: ...
 
 class RollValueError(RollError):
     """A bad value was passed to an operator."""

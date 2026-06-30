@@ -5,7 +5,7 @@ from lark import Token as Token
 from .die import DiceSize as DiceSize, Die as Die
 from .node import ASTNode as ASTNode, Number as Number
 from .operators import (
-    AdvantageCategory as AdvantageCategory,
+    AdvantageOperator as AdvantageOperator,
     Operator as Operator,
     OperatorCategory as OperatorCategory,
     Selector as Selector,

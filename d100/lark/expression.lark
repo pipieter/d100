@@ -1,0 +1,34 @@
+// Expression grammar
+// This grammar file is purely focused on parsing expressions, and not the actual dice
+
+expr: num
+
+// math and operators, PMDAS
+?num: comparison
+
+?comparison: (comparison COMP_OPERATOR _WS?)? a_num _WS?
+COMP_OPERATOR: "==" | ">=" | "<=" | "!=" | "<" | ">"
+
+?a_num: (a_num A_OP _WS?)? m_num _WS?
+A_OP: "+" | "-"
+
+?m_num: (m_num M_OP _WS?)? u_num _WS?
+M_OP: "*" | "//" | "/" | "%"
+
+?u_num: num_expr | U_OP _WS? u_num
+U_OP: "+" | "-"
+
+// numbers
+?num_expr: (parenthetical | value)
+
+parenthetical: "(" _WS? num _WS? ")"
+value: /[A-Za-z0-9<>%\.]+/
+
+// whitespace
+_WS: /[ \t\f\r\n]/+
+
+// imports
+%import common.INT
+%import common.DECIMAL
+%import common.LETTER
+%import common.DIGIT

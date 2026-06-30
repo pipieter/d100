@@ -1,27 +1,14 @@
 from typing import Literal
 
+DiceOperator = Literal["rr", "ro", "ra", "e", "mi", "ma", "rs"]
+SetOperator = Literal["k", "p"]
+AdvantageOperator = Literal["adv", "dis"]
+ExpressionOperator = Literal["red"]
+
 UnaryOperator = Literal["+", "-"]
 BinaryOperator = Literal["+", "-", "*", "/", "//", "%", "<", ">", "==", ">=", "<=", "!="]
 SelectorCategory = Literal["<", ">", "h", "l"]
-OperatorCategory = Literal[
-    # set only
-    "k",
-    "p",
-    # dice only
-    "rr",
-    "ro",
-    "ra",
-    "rs",
-    "e",
-    "mi",
-    "ma",
-    # expr only
-    "red",
-    # advantage
-    "adv",
-    "dis",
-]
-AdvantageCategory = Literal["adv", "dis"]
+OperatorCategory = DiceOperator | SetOperator | ExpressionOperator | AdvantageOperator
 
 
 class Selector:
