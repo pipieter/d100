@@ -5,7 +5,7 @@ from lark import Token
 
 from .die import DiceSize, Die
 from .node import ASTNode, Number
-from .operators import AdvantageOperator, Operator, OperatorCategory, Selector
+from .operators import AdvantageCategory, Operator, OperatorCategory, Selector
 from ..context import RollContext
 from ..distribution import ConvolutionDistributionBuilder, DiscreteDistributionBuilder, Distribution
 from ..errors import RollError, RollValueError
@@ -60,7 +60,7 @@ class Dice(Number):
     @classmethod
     def new(cls, ast: "ASTDice", context: RollContext) -> tuple["Dice", list["Dice"]]:
         """Roll a new set of dice."""
-        adv: AdvantageOperator | None = None
+        adv: AdvantageCategory | None = None
         roll_count = 1
         for operator in ast.operations:
             if operator.op == "adv" or operator.op == "dis":

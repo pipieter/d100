@@ -35,7 +35,7 @@ def test_context_d20(has_d20: bool, expr: str):
     "is_comparison, expr",
     [
         (True, "1d20 > 3"),
-        (True, "1d20 - 1d4 > 3"),
+        (True, "1d20 - 1d4> 3"),
         (True, "((1d20 > 4))"),
         (False, "1d20"),
         (False, "(1d20 > 3) * 4"),

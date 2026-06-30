@@ -1,13 +1,10 @@
 from _typeshed import Incomplete
 
-DiceOperator: Incomplete
-SetOperator: Incomplete
-AdvantageOperator: Incomplete
-ExpressionOperator: Incomplete
 UnaryOperator: Incomplete
 BinaryOperator: Incomplete
 SelectorCategory: Incomplete
-OperatorCategory = DiceOperator | SetOperator | ExpressionOperator | AdvantageOperator
+OperatorCategory: Incomplete
+AdvantageCategory: Incomplete
 
 class Selector:
     cat: SelectorCategory | None
