@@ -27,7 +27,7 @@ class Selector:
         if self.cat:
             return f"{self.cat}{self.num}"
         return str(self.num)
-    
+
     def __repr__(self) -> str:
         return f"<Selector cat={self.cat} num={self.num} />"
 

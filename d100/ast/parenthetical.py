@@ -1,15 +1,13 @@
 from collections.abc import Sequence
 from typing import get_args
 
-from ..errors import RollError
-
-from .operators import AdvantageCategory, Operator
-
 from .dice import ASTDice, find_from_advantage
 from .die import DiceSize, Die
 from .node import ASTNode, Number
+from .operators import AdvantageCategory, Operator
 from ..context import RollContext
 from ..distribution import Distribution
+from ..errors import RollError
 
 
 class Parenthetical(Number):
