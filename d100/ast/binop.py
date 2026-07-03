@@ -137,12 +137,10 @@ class ASTBinOp(ASTNode):
         if self.op not in ["-", "+"]:
             return None
 
-        left = self.left.find_dice(count, size)
-        if left is not None:
+        if (left := self.left.find_dice(count, size)) is not None:
             return left
 
-        right = self.right.find_dice(count, size)
-        if right is not None:
+        if (right := self.right.find_dice(count, size)) is not None:
             return right
 
         return None

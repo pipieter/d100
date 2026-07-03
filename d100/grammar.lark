@@ -22,24 +22,29 @@ U_OP: "+" | "-"
 
 literal: INTEGER | DECIMAL
 
-parenthetical: "(" _WS? num _WS? ")"
+parenthetical: "(" _WS? num _WS? ")" advantage_operator?
 
 // dice
 ?dice: dice_expr dice_op*
 
-dice_op: ((DICE_OPERATOR | SET_OPERATOR) selector) | EXPRESSION_OPERATOR | (ADVANTAGE_OPERATOR num_selector?)
+dice_op: dice_operator | set_operator | advantage_operator | expression_operator
+
 SET_OPERATOR: "k" | "p"
 DICE_OPERATOR: "rr" | "ro" | "ra" | "e" | "mi" | "ma" | "rs"
 ADVANTAGE_OPERATOR: "adv" | "dis"
 EXPRESSION_OPERATOR: "red"
 
+set_operator: SET_OPERATOR selector
+dice_operator: DICE_OPERATOR selector
+advantage_operator: ADVANTAGE_OPERATOR num_selector?
+expression_operator: EXPRESSION_OPERATOR
+
 dice_expr: INTEGER? "d" DICE_VALUE
 
+?selector: [SELTYPE] INTEGER
+?num_selector: INTEGER
+
 DICE_VALUE: INTEGER | "%"
-
-selector: [SELTYPE] INTEGER
-num_selector: INTEGER
-
 SELTYPE: "l" | "h" | "<" | ">"
 
 // whitespace
