@@ -1,7 +1,7 @@
 import os
 import typing
 from collections.abc import MutableMapping
-from typing import Any, Optional, TypeGuard
+from typing import Any, TypeGuard
 
 import cachetools
 import lark
@@ -12,7 +12,16 @@ from .ast.dice import ASTDice
 from .ast.expression import ASTExpression
 from .ast.literal import ASTLiteral
 from .ast.node import ASTNode
-from .ast.operators import BinaryOperator, Operator, OperatorCategory, Selector, UnaryOperator
+from .ast.operators import (
+    AdvantageCategory,
+    BinaryOperator,
+    DiceCategory,
+    ExpressionCategory,
+    Operator,
+    Selector,
+    SetCategory,
+    UnaryOperator,
+)
 from .ast.parenthetical import ASTParenthetical
 from .ast.unop import ASTUnOp
 from .errors import RollError, RollSyntaxError
@@ -72,15 +81,20 @@ class RollTransformer(Transformer[Any, Any]):
 
         raise SyntaxError(f"Unsupported literal type {value.type}")
 
-    def parenthetical(self, num: Any) -> ASTParenthetical:
-        return ASTParenthetical(*num)
+    def parenthetical(self, num: tuple[ASTNode] | tuple[ASTNode, Operator]) -> ASTParenthetical:
+        if len(num) == 1:
+            (value,) = num
+            return ASTParenthetical(value, None)
+        else:
+            value, operator = num
+            return ASTParenthetical(value, operator)
 
     def dice(self, opdice: Any) -> ASTDice:
         dice, *operations = opdice
         return ASTDice(dice.num, dice.size, *operations)
 
-    def dice_op(self, opsel: tuple[OperatorCategory, Optional[Selector]]) -> Operator:
-        return Operator.new(*opsel)
+    def dice_op(self, opsel: tuple[Operator]) -> Operator:
+        return opsel[0]
 
     def dice_expr(self, dice: Any) -> ASTDice:
         if len(dice) == 1:
@@ -92,6 +106,26 @@ class RollTransformer(Transformer[Any, Any]):
 
     def num_selector(self, sel: Any) -> Selector:
         return Selector(None, *sel)
+
+    def dice_operator(self, opsel: tuple[DiceCategory, Selector]) -> Operator:
+        op, sel = opsel
+        return Operator.new(op, sel)
+
+    def set_operator(self, opsel: tuple[SetCategory, Selector]) -> Operator:
+        op, sel = opsel
+        return Operator.new(op, sel)
+
+    def advantage_operator(self, opsel: tuple[AdvantageCategory] | tuple[AdvantageCategory, int]) -> Operator:
+        if len(opsel) == 1:
+            (op,) = opsel
+            return Operator.new(op, Selector(None, 2))
+
+        op, sel = opsel
+        return Operator.new(op, Selector(None, sel))
+
+    def expression_operator(self, opsel: tuple[ExpressionCategory]) -> Operator:
+        (op,) = opsel
+        return Operator.new(op)
 
 
 class Parser:

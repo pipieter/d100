@@ -299,3 +299,36 @@ def test_multi_adv(r1: int, r2: int, r3: int):
     result = roll(f"1d20adv{r1} + 1d8adv{r2} + 1d4adv{r3} + 3")
     assert len(result.rolls) == r1 * r2 * r3
     assert result.total == max(rr.total for rr in result.rolls)
+
+
+@pytest.mark.parametrize("ops", ["kh3", "mi4", "ma4", "rr<3", "ro1"])
+def test_parentheses_invalid_operators(ops: str):
+    with pytest.raises(RollSyntaxError):
+        expr = f"(1d4 + 1d6 + 1d8){ops}"
+        roll(expr)
+
+
+@pytest.mark.parametrize("expr", ["(1d20)adv", "(1d8+1d6)adv3", "(2d6-1)dis"])
+def test_parenthesis_advantage_count(expr: str):
+    result = roll(expr)
+    assert len(result.rolls) > 1
+
+
+def test_parenthesis_advantage():
+    expr = "(1d20adv2 + 1d20)adv3"
+    result = roll(expr)
+    assert len(result.rolls) == 6
+    assert result.total == max(rr.total for rr in result.rolls)
+    assert result.expression == expr
+
+    expr = "(1d4 + 1d6 + 1d8)dis2"
+    result = roll(expr)
+    assert len(result.rolls) == 2
+    assert result.total == min(rr.total for rr in result.rolls)
+    assert result.expression == expr
+
+    expr = "(((1d20adv2)dis2)adv2)dis2"
+    result = roll(expr)
+    assert len(result.rolls) == 16
+    assert result.total in (rr.total for rr in result.rolls)
+    assert result.expression == expr

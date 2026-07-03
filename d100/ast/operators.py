@@ -3,25 +3,13 @@ from typing import Literal
 UnaryOperator = Literal["+", "-"]
 BinaryOperator = Literal["+", "-", "*", "/", "//", "%", "<", ">", "==", ">=", "<=", "!="]
 SelectorCategory = Literal["<", ">", "h", "l"]
-OperatorCategory = Literal[
-    # set only
-    "k",
-    "p",
-    # dice only
-    "rr",
-    "ro",
-    "ra",
-    "rs",
-    "e",
-    "mi",
-    "ma",
-    # expr only
-    "red",
-    # advantage
-    "adv",
-    "dis",
-]
+
+DiceCategory = Literal["rr", "ro", "ra", "rs", "e", "mi", "ma"]
+SetCategory = Literal["k", "p"]
+ExpressionCategory = Literal["red"]
 AdvantageCategory = Literal["adv", "dis"]
+
+OperatorCategory = DiceCategory | SetCategory | ExpressionCategory | AdvantageCategory
 
 
 class Selector:
@@ -39,6 +27,9 @@ class Selector:
         if self.cat:
             return f"{self.cat}{self.num}"
         return str(self.num)
+
+    def __repr__(self) -> str:
+        return f"<Selector cat={self.cat} num={self.num} />"
 
 
 class Operator:
@@ -72,3 +63,7 @@ class Operator:
         if len(self.sels) == 0:
             return self.op
         return "".join([f"{self.op}{str(sel)}" for sel in self.sels])
+
+    def __repr__(self) -> str:
+        sels = "".join(repr(sel) for sel in self.sels)
+        return f"<Operator op={self.op} sels={sels} />"
