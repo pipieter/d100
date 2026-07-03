@@ -59,7 +59,10 @@ class ASTParenthetical(ASTNode):
         return [self.value]
 
     def __str__(self) -> str:
-        return f"({str(self.value)})"
+        expr = f"({str(self.value)})"
+        if self.operator:
+            expr += str(self.operator)
+        return expr
 
     def roll(self, context: RollContext) -> tuple[Parenthetical, Sequence[Parenthetical]]:
         if self.operator:
