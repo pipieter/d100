@@ -300,7 +300,7 @@ def test_multi_adv(r1: int, r2: int, r3: int):
     assert len(result.rolls) == r1 * r2 * r3
     assert result.total == max(rr.total for rr in result.rolls)
 
-@pytest.mark.expr("ops", ["kh3", "mi4", "ma4", "rr<3", "ro1"])
+@pytest.mark.parametrize("ops", ["kh3", "mi4", "ma4", "rr<3", "ro1"])
 def test_parentheses_invalid_operators(ops: str):
     with pytest.raises(RollSyntaxError):
         expr = f"(1d4 + 1d6 + 1d8){ops}"
