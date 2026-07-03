@@ -315,14 +315,20 @@ def test_parenthesis_advantage_count(expr: str):
 
 
 def test_parenthesis_advantage():
-    result = roll("(1d20adv2 + 1d20)adv3")
+    expr = "(1d20adv2 + 1d20)adv3"
+    result = roll(expr)
     assert len(result.rolls) == 6
     assert result.total == max(rr.total for rr in result.rolls)
+    assert result.expression == expr
 
-    result = roll("(1d4 + 1d6 + 1d8)dis")
+    expr = "(1d4 + 1d6 + 1d8)dis2"
+    result = roll(expr)
     assert len(result.rolls) == 2
     assert result.total == min(rr.total for rr in result.rolls)
+    assert result.expression == expr
 
-    result = roll("(((1d20adv)dis)adv)dis")
+    expr = "(((1d20adv2)dis2)adv2)dis2"
+    result = roll(expr)
     assert len(result.rolls) == 16
     assert result.total in (rr.total for rr in result.rolls)
+    assert result.expression == expr
