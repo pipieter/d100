@@ -1,10 +1,12 @@
 from collections.abc import Sequence
 
-from .dice import ASTDice as ASTDice
+from .dice import ASTDice as ASTDice, find_from_advantage as find_from_advantage
 from .die import DiceSize as DiceSize, Die as Die
 from .node import ASTNode as ASTNode, Number as Number
+from .operators import AdvantageCategory as AdvantageCategory, Operator as Operator
 from ..context import RollContext as RollContext
 from ..distribution import Distribution as Distribution
+from ..errors import RollError as RollError
 
 class Parenthetical(Number):
     """Parentheticals contain values between parentheses."""
@@ -22,7 +24,8 @@ class ASTParenthetical(ASTNode):
     """Expressions are usually the root of all ASTs."""
 
     value: ASTNode
-    def __init__(self, value: ASTNode) -> None: ...
+    operator: Operator | None
+    def __init__(self, value: ASTNode, operator: Operator | None) -> None: ...
     def copy(self) -> ASTParenthetical: ...
     @property
     def children(self) -> Sequence[ASTNode]: ...

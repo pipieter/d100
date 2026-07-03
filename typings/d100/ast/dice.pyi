@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import TypeVar
 
 from lark import Token as Token
 
@@ -17,6 +18,10 @@ from ..distribution import (
     Distribution as Distribution,
 )
 from ..errors import RollError as RollError, RollValueError as RollValueError
+
+TNumber = TypeVar("TNumber", bound=Number)
+
+def find_from_advantage(rolls: Sequence[TNumber], adv: OperatorCategory | None) -> TNumber: ...
 
 class Dice(Number):
     """Represents a set of dice."""

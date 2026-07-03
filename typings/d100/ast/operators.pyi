@@ -3,8 +3,11 @@ from _typeshed import Incomplete
 UnaryOperator: Incomplete
 BinaryOperator: Incomplete
 SelectorCategory: Incomplete
-OperatorCategory: Incomplete
+DiceCategory: Incomplete
+SetCategory: Incomplete
+ExpressionCategory: Incomplete
 AdvantageCategory: Incomplete
+OperatorCategory = DiceCategory | SetCategory | ExpressionCategory | AdvantageCategory
 
 class Selector:
     cat: SelectorCategory | None
