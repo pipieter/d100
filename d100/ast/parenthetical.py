@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 from typing import get_args
 
+from ..utils import apply_advantage_to_distribution
+
 from .dice import ASTDice, find_from_advantage
 from .die import DiceSize, Die
 from .node import ASTNode, Number
@@ -90,7 +92,14 @@ class ASTParenthetical(ASTNode):
         return parenthetical, parentheticals
 
     def distribution(self) -> Distribution:
-        return self.value.distribution()
+        dist = self.value.distribution()
+
+        if self.operator:
+            adv = self.operator.op
+            num = self.operator.sels[0].num if self.operator.sels else None
+            dist = apply_advantage_to_distribution(dist, adv, num)
+
+        return dist
 
     @property
     def is_comparison(self) -> bool:
