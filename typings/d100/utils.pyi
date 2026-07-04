@@ -2,6 +2,7 @@ from .ast.dice import ASTDice as ASTDice, Dice as Dice
 from .ast.expression import ASTExpression as ASTExpression
 from .ast.node import Number as Number
 from .ast.operators import AdvantageCategory as AdvantageCategory, Operator as Operator, Selector as Selector
+from .distribution import Distribution as Distribution
 from .enums import Critical as Critical
 from .errors import RollError as RollError
 
@@ -23,3 +24,5 @@ def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCatego
     Returns:
         ASTExpression: The resulting expression with the advantage.
     """
+
+def apply_advantage_to_distribution(distribution: Distribution, adv: AdvantageCategory | None, num: int | None): ...
