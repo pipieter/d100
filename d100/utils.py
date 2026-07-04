@@ -1,7 +1,7 @@
 from .ast.dice import ASTDice, Dice
 from .ast.expression import ASTExpression
 from .ast.node import Number
-from .ast.operators import AdvantageCategory, Operator, Selector
+from .ast.operators import AdvantageCategory, Operator, OperatorCategory, Selector
 from .distribution import Distribution
 from .enums import Critical
 from .errors import RollError
@@ -69,7 +69,7 @@ def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCatego
     return expr
 
 
-def apply_advantage_to_distribution(distribution: Distribution, adv: AdvantageCategory | None, num: int | None):
+def apply_advantage_to_distribution(distribution: Distribution, adv: OperatorCategory | None, num: int | None):
     if adv is None:
         return distribution
 
