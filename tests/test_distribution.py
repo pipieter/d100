@@ -1,9 +1,8 @@
 import pytest
 
 from d100 import distribution
-from d100.errors import RollSyntaxError
-
 from d100.distribution import Distribution
+from d100.errors import RollSyntaxError
 from . import approx, assert_distribution
 
 

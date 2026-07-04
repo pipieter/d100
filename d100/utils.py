@@ -1,9 +1,8 @@
-from .distribution import Distribution
-
 from .ast.dice import ASTDice, Dice
 from .ast.expression import ASTExpression
 from .ast.node import Number
 from .ast.operators import AdvantageCategory, Operator, Selector
+from .distribution import Distribution
 from .enums import Critical
 from .errors import RollError
 

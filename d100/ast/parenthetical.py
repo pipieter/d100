@@ -1,8 +1,6 @@
 from collections.abc import Sequence
 from typing import get_args
 
-from ..utils import apply_advantage_to_distribution
-
 from .dice import ASTDice, find_from_advantage
 from .die import DiceSize, Die
 from .node import ASTNode, Number
@@ -10,6 +8,7 @@ from .operators import AdvantageCategory, Operator
 from ..context import RollContext
 from ..distribution import Distribution
 from ..errors import RollError
+from ..utils import apply_advantage_to_distribution
 
 
 class Parenthetical(Number):
