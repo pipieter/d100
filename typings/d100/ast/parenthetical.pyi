@@ -7,6 +7,7 @@ from .operators import AdvantageCategory as AdvantageCategory, Operator as Opera
 from ..context import RollContext as RollContext
 from ..distribution import Distribution as Distribution
 from ..errors import RollError as RollError
+from ..utils import apply_advantage_to_distribution as apply_advantage_to_distribution
 
 class Parenthetical(Number):
     """Parentheticals contain values between parentheses."""

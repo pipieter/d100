@@ -293,7 +293,6 @@ class ASTDice(ASTNode):
             self.size = int(size)
         self.operations = list(operations)
         self._validate_operations()
-        self._simplify_operations()
 
     @property
     def children(self) -> Sequence[ASTNode]:
@@ -304,22 +303,6 @@ class ASTDice(ASTNode):
             return 100
         else:
             return self.size
-
-    def _simplify_operations(self):
-        """Simplifies expressions like k1k2k3 into k(1,2,3)."""
-        new_operations: list[Operator] = []
-
-        for operation in self.operations:
-            if operation.op in Operator.IMMEDIATE or not new_operations:
-                new_operations.append(operation)
-            else:
-                last_op = new_operations[-1]
-                if operation.op == last_op.op:
-                    last_op.add_sels(operation.sels)
-                else:
-                    new_operations.append(operation)
-
-        self.operations = new_operations
 
     def _validate_operations(self):
         """Validates if the operations are valid."""

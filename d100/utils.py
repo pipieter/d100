@@ -1,7 +1,8 @@
 from .ast.dice import ASTDice, Dice
 from .ast.expression import ASTExpression
 from .ast.node import Number
-from .ast.operators import AdvantageCategory, Operator, Selector
+from .ast.operators import AdvantageCategory, Operator, OperatorCategory, Selector
+from .distribution import Distribution
 from .enums import Critical
 from .errors import RollError
 
@@ -66,3 +67,19 @@ def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCatego
         raise RollError(f"Could not add advantage to expression.")
 
     return expr
+
+
+def apply_advantage_to_distribution(distribution: Distribution, adv: OperatorCategory | None, num: int | None):
+    if adv is None:
+        return distribution
+
+    if num is None:
+        num = 2
+
+    if adv == "adv":
+        return distribution.advantage(num)
+
+    if adv == "dis":
+        return distribution.disadvantage(num)
+
+    raise RollError(f"Unknown advantage type: {adv}")

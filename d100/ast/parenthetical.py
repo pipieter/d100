@@ -8,6 +8,7 @@ from .operators import AdvantageCategory, Operator
 from ..context import RollContext
 from ..distribution import Distribution
 from ..errors import RollError
+from ..utils import apply_advantage_to_distribution
 
 
 class Parenthetical(Number):
@@ -90,7 +91,14 @@ class ASTParenthetical(ASTNode):
         return parenthetical, parentheticals
 
     def distribution(self) -> Distribution:
-        return self.value.distribution()
+        dist = self.value.distribution()
+
+        if self.operator:
+            adv = self.operator.op
+            num = self.operator.sels[0].num if self.operator.sels else None
+            dist = apply_advantage_to_distribution(dist, adv, num)
+
+        return dist
 
     @property
     def is_comparison(self) -> bool:

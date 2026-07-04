@@ -1,8 +1,9 @@
 import pytest
 
 from d100 import distribution
+from d100.distribution import Distribution
 from d100.errors import RollSyntaxError
-from . import assert_distribution
+from . import approx, assert_distribution
 
 
 def test_d20():
@@ -538,4 +539,40 @@ def test_binops_neq():
 
     # Verified using anydice.com
     values = [(0, 0.1250), (1, 0.8750)]
+    assert_distribution(dist, values)
+
+
+@pytest.mark.parametrize(
+    "dist1,dist2",
+    [
+        (distribution("(1d6+1d8)adv2"), distribution("1d6+1d8").advantage()),
+        (distribution("(3d20)dis3"), distribution("3d20").disadvantage(3)),
+        (distribution("(1+1+1+1+1+1)adv4"), distribution("1+1+1+1+1+1").advantage(4)),
+    ],
+)
+def test_parenthetical_operators_eq(dist1: Distribution, dist2: Distribution):
+    assert set(dist1.keys()) == set(dist2.keys())
+    for key in dist1.keys():
+        assert approx(dist1.get(key)) == dist2.get(key)
+
+
+def test_parenthetical_operators():
+    dist = distribution("(1d4 + 1d8)adv3")
+
+    # verified using anydice.com
+    # output [highest of [highest of (1d4+1d8) and (1d4+1d8)] and (1d4+1d8)]
+    values = [
+        (2, 0.000030517578125),
+        (3, 0.00079345703125),
+        (4, 0.005767822265625),
+        (5, 0.02392578125),
+        (6, 0.05322265625),
+        (7, 0.09423828125),
+        (8, 0.14697265625),
+        (9, 0.21142578125),
+        (10, 0.20791625976562),
+        (11, 0.16485595703125),
+        (12, 0.090850830078125),
+    ]
+
     assert_distribution(dist, values)
