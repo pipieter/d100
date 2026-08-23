@@ -18,7 +18,7 @@ from . import approx
 
 def operator(op: OperatorCategory, sel: tuple[SelectorCategory | None, int]):
     cat, num = sel
-    return Operator(op, [Selector(cat, num)])
+    return Operator(op, Selector(cat, num))
 
 
 @pytest.mark.parametrize("count", [1, 2, 3, 4])

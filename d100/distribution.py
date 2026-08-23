@@ -379,16 +379,13 @@ class AbstractDistributionBuilder(abc.ABC):
             "dis": self.apply_dis,
         }
 
-        operation: str = op.op
-        selectors: list[Selector] = op.sels
-
-        if operation not in operation_functions:
+        if op.op not in operation_functions:
             raise RollError(f"Unsupported operator: '{op.op}'")
 
-        operation_functions[operation](selectors)
+        operation_functions[op.op](op.sel)
 
     @abc.abstractmethod
-    def apply_mi(self, selectors: list[Selector]) -> None:
+    def apply_mi(self, selector: Selector) -> None:
         """Apply the minimum operator to the builder.
 
         Args:
@@ -397,7 +394,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_ma(self, selectors: list[Selector]) -> None:
+    def apply_ma(self, selector: Selector) -> None:
         """Apply the maximum operator to the builder.
 
         Args:
@@ -406,7 +403,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_ro(self, selectors: list[Selector]) -> None:
+    def apply_ro(self, selector: Selector) -> None:
         """Apply the re-roll once operator to the builder.
 
         Args:
@@ -415,7 +412,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_e(self, selectors: list[Selector]) -> None:
+    def apply_e(self, selector: Selector) -> None:
         """Apply the explode operator to the builder.
 
         Args:
@@ -424,7 +421,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_k(self, selectors: list[Selector]) -> None:
+    def apply_k(self, selector: Selector) -> None:
         """Apply the keep operator to the builder.
 
         Args:
@@ -433,7 +430,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_p(self, selectors: list[Selector]) -> None:
+    def apply_p(self, selector: Selector) -> None:
         """Apply the drop operator to the builder.
 
         Args:
@@ -442,7 +439,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_ra(self, selectors: list[Selector]) -> None:
+    def apply_ra(self, selector: Selector) -> None:
         """Apply the reroll and add operator to the builder.
 
         Args:
@@ -451,7 +448,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_rr(self, selectors: list[Selector]) -> None:
+    def apply_rr(self, selector: Selector) -> None:
         """Apply the repeated reroll operator to the builder.
 
         Args:
@@ -460,7 +457,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_adv(self, selectors: list[Selector]) -> None:
+    def apply_adv(self, selector: Selector) -> None:
         """Apply the advantage operator to the builder.
 
         Args:
@@ -469,7 +466,7 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_dis(self, selectors: list[Selector]) -> None:
+    def apply_dis(self, selector: Selector) -> None:
         """Apply the disadvantage operator to the builder.
 
         Args:
@@ -603,107 +600,99 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         if operation.op in invalid_operations:
             return False
 
-        categories = [sel.cat for sel in operation.sels]
-        if any(category in invalid_selector_categories for category in categories):
+        if operation.sel.cat in invalid_selector_categories:
             return False
 
         return True
 
-    def apply_mi(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            if selector.cat not in ["", None]:
-                raise RollError(f"Unsupported selector category for mi: '{selector.cat}'")
+    def apply_mi(self, selector: Selector) -> None:
+        if selector.cat not in ["", None]:
+            raise RollError(f"Unsupported selector category for mi: '{selector.cat}'")
 
-            num: int = selector.num
+        num: int = selector.num
 
-            # Extend the convolution
-            padding = num - len(self._convolution) + 1
-            self._convolution.extend([0] * padding)
-            for i in range(1, num):
-                self._convolution[num] += self._convolution[i]
+        # Extend the convolution
+        padding = num - len(self._convolution) + 1
+        self._convolution.extend([0] * padding)
+        for i in range(1, num):
+            self._convolution[num] += self._convolution[i]
+            self._convolution[i] = 0
+
+    def apply_ma(self, selector: Selector) -> None:
+        if selector.cat not in ["", None]:
+            raise RollError(f"Unsupported selector category for ma: '{selector.cat}'")
+
+        num: int = selector.num
+        for i in range(num + 1, len(self._convolution)):
+            self._convolution[num] += self._convolution[i]
+            self._convolution[i] = 0
+
+    def apply_k(self, selector: Selector) -> None:
+        for i in range(1, len(self._convolution)):
+            if not self._matches_selector(i, selector):
+                self._convolution[0] += self._convolution[i]
                 self._convolution[i] = 0
 
-    def apply_ma(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            if selector.cat not in ["", None]:
-                raise RollError(f"Unsupported selector category for ma: '{selector.cat}'")
-
-            num: int = selector.num
-            for i in range(num + 1, len(self._convolution)):
-                self._convolution[num] += self._convolution[i]
+    def apply_p(self, selector: Selector) -> None:
+        for i in range(1, len(self._convolution)):
+            if self._matches_selector(i, selector):
+                self._convolution[0] += self._convolution[i]
                 self._convolution[i] = 0
 
-    def apply_k(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            for i in range(1, len(self._convolution)):
-                if not self._matches_selector(i, selector):
-                    self._convolution[0] += self._convolution[i]
-                    self._convolution[i] = 0
+    def apply_ro(self, selector: Selector) -> None:
+        reroll = 1 / self._sides
+        odds_rerolling = 0
 
-    def apply_p(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            for i in range(1, len(self._convolution)):
-                if self._matches_selector(i, selector):
-                    self._convolution[0] += self._convolution[i]
-                    self._convolution[i] = 0
+        # Calculate the odds of event occurring
+        for i in range(1, len(self._convolution)):
+            if self._matches_selector(i, selector):
+                odds_rerolling += self._convolution[i]
 
-    def apply_ro(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            reroll = 1 / self._sides
-            odds_rerolling = 0
+        # Re-calculate the odds
+        for i in range(1, len(self._convolution)):
+            if self._matches_selector(i, selector):
+                self._convolution[i] = odds_rerolling * reroll
+            else:
+                self._convolution[i] += odds_rerolling * reroll
 
-            # Calculate the odds of event occurring
-            for i in range(1, len(self._convolution)):
-                if self._matches_selector(i, selector):
-                    odds_rerolling += self._convolution[i]
-
-            # Re-calculate the odds
-            for i in range(1, len(self._convolution)):
-                if self._matches_selector(i, selector):
-                    self._convolution[i] = odds_rerolling * reroll
-                else:
-                    self._convolution[i] += odds_rerolling * reroll
-
-    def apply_e(self, selectors: list[Selector]) -> None:
+    def apply_e(self, selector: Selector) -> None:
         raise RollError(f"Explode operator not supported for ConvolutionDistributionBuilder")
 
-    def apply_ra(self, selectors: list[Selector]) -> None:
+    def apply_ra(self, selector: Selector) -> None:
         raise RollError(f"Reroll and add operator not supported for ConvolutionDistributionBuilder")
 
-    def apply_rr(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            if self._creates_infinite_rr_loop(self._count, self._sides, selector):
-                raise RollError(
-                    f"Selector {str(selector)} will result in an infinite rr reroll loop for"
-                    f" {self._count}d{self._sides}!"
-                )
+    def apply_rr(self, selector: Selector) -> None:
+        if self._creates_infinite_rr_loop(self._count, self._sides, selector):
+            raise RollError(
+                f"Selector {str(selector)} will result in an infinite rr reroll loop for {self._count}d{self._sides}!"
+            )
 
-            # In order to calculate the re-roll odds, we first find all the values that would be re-rolled,
-            # and then we equally distribute the total probabilities of those rolls to all the values in the
-            # range [1, sides].
-            matched_values: list[int] = []
-            target_values: list[int] = []
+        # In order to calculate the re-roll odds, we first find all the values that would be re-rolled,
+        # and then we equally distribute the total probabilities of those rolls to all the values in the
+        # range [1, sides].
+        matched_values: list[int] = []
+        target_values: list[int] = []
 
-            for i in range(1, len(self._convolution)):
-                if self._matches_selector(i, selector):
-                    matched_values.append(i)
-                elif i <= self._sides:
-                    target_values.append(i)
+        for i in range(1, len(self._convolution)):
+            if self._matches_selector(i, selector):
+                matched_values.append(i)
+            elif i <= self._sides:
+                target_values.append(i)
 
-            if len(target_values) == 0:
-                raise RollError(f"Selector {str(selector)} could not be re-rolled for {self._count}d{self._sides}!")
+        if len(target_values) == 0:
+            raise RollError(f"Selector {str(selector)} could not be re-rolled for {self._count}d{self._sides}!")
 
-            total_probability = sum(self._convolution[i] for i in matched_values)
-            probability_per_target = total_probability / len(target_values)
-            for value in matched_values:
-                self._convolution[value] = 0
-            for value in target_values:
-                self._convolution[value] += probability_per_target
+        total_probability = sum(self._convolution[i] for i in matched_values)
+        probability_per_target = total_probability / len(target_values)
+        for value in matched_values:
+            self._convolution[value] = 0
+        for value in target_values:
+            self._convolution[value] += probability_per_target
 
-    def apply_adv(self, selectors: list[Selector]) -> None:
+    def apply_adv(self, selector: Selector) -> None:
         raise RollError(f"Advantage operator not supported for ConvolutionDistributionBuilder")
 
-    def apply_dis(self, selectors: list[Selector]) -> None:
+    def apply_dis(self, selector: Selector) -> None:
         raise RollError(f"Disadvantage operator not supported for ConvolutionDistributionBuilder")
 
 
@@ -775,29 +764,27 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             new_dist[new_key] += value
         self._dist = new_dist
 
-    def apply_mi(self, selectors: list[Selector]) -> None:
+    def apply_mi(self, selector: Selector) -> None:
+        if selector.cat not in ["", None]:
+            raise RollError(f"Unsupported selector category for mi: '{selector.cat}'")
+
         def apply_mi_to_key(key: DiscreteKey, min_value: int) -> DiscreteKey:
             return tuple([value if value >= selector.num else min_value for value in key])
 
-        for selector in selectors:
-            if selector.cat not in ["", None]:
-                raise RollError(f"Unsupported selector category for mi: '{selector.cat}'")
+        min_value: int = selector.num
+        self._transform_keys(lambda key: apply_mi_to_key(key, min_value))
 
-            min_value: int = selector.num
-            self._transform_keys(lambda key: apply_mi_to_key(key, min_value))
+    def apply_ma(self, selector: Selector) -> None:
+        if selector.cat not in ["", None]:
+            raise RollError(f"Unsupported selector category for ma: '{selector.cat}'")
 
-    def apply_ma(self, selectors: list[Selector]) -> None:
         def apply_ma_to_key(key: DiscreteKey, max_value: int) -> DiscreteKey:
             return tuple([value if value <= selector.num else max_value for value in key])
 
-        for selector in selectors:
-            if selector.cat not in ["", None]:
-                raise RollError(f"Unsupported selector category for ma: '{selector.cat}'")
+        max_value: int = selector.num
+        self._transform_keys(lambda key: apply_ma_to_key(key, max_value))
 
-            max_value: int = selector.num
-            self._transform_keys(lambda key: apply_ma_to_key(key, max_value))
-
-    def apply_k(self, selectors: list[Selector]) -> None:
+    def apply_k(self, selector: Selector) -> None:
         def apply_k_to_key(key: DiscreteKey, selector: Selector) -> DiscreteKey:
             match selector.cat:
                 case "l":
@@ -815,10 +802,9 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             raise RollError(f"Invalid keep modifier selector '{selector.cat}'.")
 
-        for selector in selectors:
-            self._transform_keys(lambda key: apply_k_to_key(key, selector))
+        self._transform_keys(lambda key: apply_k_to_key(key, selector))
 
-    def apply_p(self, selectors: list[Selector]) -> None:
+    def apply_p(self, selector: Selector) -> None:
         def apply_p_to_key(key: DiscreteKey, selector: Selector) -> DiscreteKey:
             match selector.cat:
                 case "l":
@@ -836,10 +822,9 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             raise RollError(f"Invalid drop modifier selector '{selector.cat}'.")
 
-        for selector in selectors:
-            self._transform_keys(lambda key: apply_p_to_key(key, selector))
+        self._transform_keys(lambda key: apply_p_to_key(key, selector))
 
-    def apply_ro(self, selectors: list[Selector]) -> None:
+    def apply_ro(self, selector: Selector) -> None:
         def get_reroll_dice_possibilities(dice: DiscreteKey, sides: int, selector: Selector) -> list[DiscreteKey]:
             """
             Get all re-roll possibilities in a dice. This generates all possible results where the values matching
@@ -886,22 +871,21 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             return outcomes
 
-        for selector in selectors:
-            new_dist = defaultdict[DiscreteKey, float](float)
-            for key in self._dist:
-                odds = self._dist.get(key, 0)
-                rerolls = get_reroll_dice_possibilities(key, self._sides, selector)
-                for reroll in rerolls:
-                    reroll_key = self._sort_key(reroll)
-                    reroll_odds = odds / len(rerolls)
-                    new_dist[reroll_key] += reroll_odds
+        new_dist = defaultdict[DiscreteKey, float](float)
+        for key in self._dist:
+            odds = self._dist.get(key, 0)
+            rerolls = get_reroll_dice_possibilities(key, self._sides, selector)
+            for reroll in rerolls:
+                reroll_key = self._sort_key(reroll)
+                reroll_odds = odds / len(rerolls)
+                new_dist[reroll_key] += reroll_odds
 
-            # Assert that the new distribution is also normalized
-            assert abs(sum(new_dist.values()) - 1) < 1e-6
+        # Assert that the new distribution is also normalized
+        assert abs(sum(new_dist.values()) - 1) < 1e-6
 
-            self._dist = new_dist
+        self._dist = new_dist
 
-    def apply_e(self, selectors: list[Selector]) -> None:
+    def apply_e(self, selector: Selector) -> None:
         def should_explode(selector: Selector, value: int) -> bool:
             if selector.cat == "h" or selector.cat == "l":
                 raise RollError(f"Invalid explode modifier selector '{selector.cat}'.")
@@ -949,39 +933,37 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             return new_dist
 
-        for selector in selectors:
-            self._dist = apply_explode(self._dist, selector, 1.0, ())
+        self._dist = apply_explode(self._dist, selector, 1.0, ())
 
-    def apply_ra(self, selectors: list[Selector]) -> None:
-        for selector in selectors:
-            new_dist = defaultdict[DiscreteKey, float](float)
-            for key, probability in self._dist.items():
-                # Check if the key matches the selector
-                matches = False
+    def apply_ra(self, selector: Selector) -> None:
+        new_dist = defaultdict[DiscreteKey, float](float)
+        for key, probability in self._dist.items():
+            # Check if the key matches the selector
+            matches = False
 
-                # If the selector is highest or lowest, and at least one element is selected,
-                # then it is always true
-                if selector.cat in ["h", "l"] and selector.num > 0:
-                    matches = True
+            # If the selector is highest or lowest, and at least one element is selected,
+            # then it is always true
+            if selector.cat in ["h", "l"] and selector.num > 0:
+                matches = True
 
-                # Otherwise, check if at least one value in the key matches
-                elif any(self._matches_selector(value, selector) for value in key):
-                    matches = True
+            # Otherwise, check if at least one value in the key matches
+            elif any(self._matches_selector(value, selector) for value in key):
+                matches = True
 
-                if not matches:
-                    new_dist[key] += probability
-                else:
-                    # At this point, the matches, and we just need to add the newly rolled value
-                    # to the key, and distribute the probability over all possibilities
-                    probability_per_roll = probability / self._sides
-                    for roll in range(1, self._sides + 1):
-                        new_key = key + (roll,)
-                        new_key = self._sort_key(new_key)
-                        new_dist[new_key] += probability_per_roll
+            if not matches:
+                new_dist[key] += probability
+            else:
+                # At this point, the matches, and we just need to add the newly rolled value
+                # to the key, and distribute the probability over all possibilities
+                probability_per_roll = probability / self._sides
+                for roll in range(1, self._sides + 1):
+                    new_key = key + (roll,)
+                    new_key = self._sort_key(new_key)
+                    new_dist[new_key] += probability_per_roll
 
-            self._dist = new_dist
+        self._dist = new_dist
 
-    def apply_rr(self, selectors: list[Selector]) -> None:
+    def apply_rr(self, selector: Selector) -> None:
         def get_repeated_reroll_dice_probabilities(
             dice: DiscreteKey, sides: int, selector: Selector
         ) -> dict[DiscreteKey, float]:
@@ -1030,34 +1012,18 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
                     new_dist[new_key] += probability * probability_per_reroll_value
             return new_dist
 
-        for selector in selectors:
-            if self._creates_infinite_rr_loop(self._count, self._sides, selector):
-                raise RollError(
-                    f"Selector {str(selector)} will result in an infinite rr reroll loop for"
-                    f" {self._count}d{self._sides}!"
-                )
+        if self._creates_infinite_rr_loop(self._count, self._sides, selector):
+            raise RollError(
+                f"Selector {str(selector)} will result in an infinite rr reroll loop for {self._count}d{self._sides}!"
+            )
 
-            new_dist = defaultdict[DiscreteKey, float](float)
-            for key, probability in self._dist.items():
-                sub_dist = get_repeated_reroll_dice_probabilities(key, self._sides, selector)
-                for new_key, sub_probability in sub_dist.items():
-                    new_dist[new_key] += probability * sub_probability
+        new_dist = defaultdict[DiscreteKey, float](float)
+        for key, probability in self._dist.items():
+            sub_dist = get_repeated_reroll_dice_probabilities(key, self._sides, selector)
+            for new_key, sub_probability in sub_dist.items():
+                new_dist[new_key] += probability * sub_probability
 
-            self._dist = new_dist
-
-    def _validate_adv_selectors(self, name: str, selectors: list[Selector]) -> list[Selector]:
-        if len(selectors) == 0:
-            # if no selectors are given, the user most likely meant the '2' selector,
-            # e.g. 1d20adv -> 1d20adv2
-            return [Selector(None, 2)]
-
-        for selector in selectors:
-            if selector.cat is not None:
-                raise RollError(f"Invalid {name} modifier selector '{selector.cat}'.")
-
-            if selector.num < 1:
-                raise RollError(f"{name.capitalize()} number must be at least one.")
-        return [*selectors]
+        self._dist = new_dist
 
     def _apply_adv_operator(
         self,
@@ -1075,16 +1041,10 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
             self._dist = new_dist
 
-    def apply_adv(self, selectors: list[Selector]) -> None:
-        selectors = self._validate_adv_selectors("advantage", selectors)
+    def apply_adv(self, selector: Selector) -> None:
         original = self._dist.copy()
+        self._apply_adv_operator(original, selector, lambda a, b: a > b)
 
-        for selector in selectors:
-            self._apply_adv_operator(original, selector, lambda a, b: a > b)
-
-    def apply_dis(self, selectors: list[Selector]) -> None:
-        selectors = self._validate_adv_selectors("disadvantage", selectors)
+    def apply_dis(self, selector: Selector) -> None:
         original = self._dist.copy()
-
-        for selector in selectors:
-            self._apply_adv_operator(original, selector, lambda a, b: a < b)
+        self._apply_adv_operator(original, selector, lambda a, b: a < b)

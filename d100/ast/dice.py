@@ -73,21 +73,13 @@ class Dice(Number):
         """Roll a new set of dice."""
         adv: AdvantageCategory | None = None
         roll_count = 1
+
         for operator in ast.operations:
             if operator.op == "adv" or operator.op == "dis":
                 if adv is not None:
                     raise ValueError(f"Encountered {operator.op} in expression, but expression already has {adv}.")
                 adv = operator.op
-
-                if len(operator.sels) == 0:
-                    roll_count = 2
-                elif len(operator.sels) != 1:
-                    raise ValueError(f"Operator {operator.op} expected one selector.")
-                else:
-                    if operator.sels[0].cat is not None:
-                        raise ValueError(f"Operator {operator.op} only works with literal numerics.")
-
-                    roll_count = operator.sels[0].num
+                roll_count = operator.sel.num
 
         if roll_count < 1:
             raise ValueError(f"Operator {adv} expected at least one roll.")
@@ -134,13 +126,7 @@ class Dice(Number):
 
     # region ==== Selector ====
 
-    def select(self, selectors: list[Selector]) -> set[Die]:
-        out: set[Die] = set()
-        for sel in selectors:
-            out.update(self.select_single(sel))
-        return out
-
-    def select_single(self, selector: Selector) -> set[Die]:
+    def select(self, selector: Selector) -> set[Die]:
         if selector.cat == "h":
             selected = sorted(self.keptset, key=lambda n: n.value, reverse=True)[: selector.num]
             return set(selected)
@@ -151,13 +137,13 @@ class Dice(Number):
 
         return set(die for die in self.keptset if selector.matches(die.value))
 
-    # endregion ==== Selectro ====
+    # endregion ==== Selector ====
 
     # region ==== Operator ====
 
     def operate(self, operator: "Operator") -> None:
         """Apply an operator to the dice set."""
-        operations: Mapping[OperatorCategory, Callable[[list[Selector]], None]] = {
+        operations: Mapping[OperatorCategory, Callable[[Selector], None]] = {
             # set only
             "k": self.keep,
             "p": self.drop,
@@ -173,32 +159,32 @@ class Dice(Number):
             "red": self.explode_red,
         }
 
-        operations[operator.op](operator.sels)
+        operations[operator.op](operator.sel)
 
-    def keep(self, selectors: list[Selector]) -> None:
+    def keep(self, selector: Selector) -> None:
         for value in self.keptset:
-            if value not in self.select(selectors):
+            if value not in self.select(selector):
                 value.drop()
 
-    def drop(self, selectors: list[Selector]) -> None:
-        for value in self.select(selectors):
+    def drop(self, selector: Selector) -> None:
+        for value in self.select(selector):
             value.drop()
 
-    def reroll(self, selectors: list[Selector]) -> None:
-        to_reroll = self.select(selectors)
+    def reroll(self, selector: Selector) -> None:
+        to_reroll = self.select(selector)
 
         while to_reroll:
             for die in to_reroll:
                 die.reroll()
 
-            to_reroll = self.select(selectors)
+            to_reroll = self.select(selector)
 
-    def reroll_once(self, selectors: list[Selector]) -> None:
-        for die in self.select(selectors):
+    def reroll_once(self, selector: Selector) -> None:
+        for die in self.select(selector):
             die.reroll()
 
-    def explode(self, selectors: list[Selector]) -> None:
-        to_explode = self.select(selectors)
+    def explode(self, selector: Selector) -> None:
+        to_explode = self.select(selector)
         already_exploded: set[Die] = set()
 
         while to_explode:
@@ -208,23 +194,23 @@ class Dice(Number):
                     self.roll_another()
 
             already_exploded.update(to_explode)
-            to_explode = (self.select(selectors)).difference(already_exploded)
+            to_explode = (self.select(selector)).difference(already_exploded)
 
-    def explode_once(self, selectors: list[Selector]) -> None:
-        for die in self.select(selectors):
+    def explode_once(self, selector: Selector) -> None:
+        for die in self.select(selector):
             if not die.exploded:
                 die.explode()
                 self.roll_another()
                 return
 
-    def reroll_and_subtract(self, selectors: list[Selector]) -> None:
-        for die in self.select(selectors):
+    def reroll_and_subtract(self, selector: Selector) -> None:
+        for die in self.select(selector):
             if not die.exploded:
                 die.explode()
                 self.roll_another(negative=True)
                 return
 
-    def explode_red(self, selectors: list[Selector]) -> None:
+    def explode_red(self, selector: Selector) -> None:
         if self.size == "%":
             size = 100
         else:
@@ -239,8 +225,7 @@ class Dice(Number):
         if rs_count > 0:
             self.roll_another(negative=True)
 
-    def minimum(self, selectors: list[Selector]) -> None:
-        selector = selectors[-1]
+    def minimum(self, selector: Selector) -> None:
         if selector.cat is not None:
             raise RollValueError(f"{str(selector)} is not a valid selector for minimums.")
         the_min = selector.num
@@ -248,11 +233,7 @@ class Dice(Number):
             if die.value < the_min:
                 die.set_value(the_min)
 
-    def maximum(self, selectors: list[Selector]) -> None:
-        """
-        :type target: Dice
-        """
-        selector = selectors[-1]
+    def maximum(self, selector: Selector) -> None:
         if selector.cat is not None:
             raise RollValueError(f"{str(selector)} is not a valid selector for maximums.")
         the_max = selector.num
@@ -298,9 +279,8 @@ class ASTDice(ASTNode):
             if op.op in ["adv", "dis"]:
                 adv_count += 1
                 # adv or dis selector must a numeric value greater than zero
-                for sel in op.sels:
-                    if sel.cat is not None or sel.num < 1:
-                        raise RollError(f"Selector for {op} must be a numeric value greater than zero.")
+                if op.sel.cat is not None or op.sel.num < 1:
+                    raise RollError(f"Selector for {op} must be a numeric value greater than zero.")
 
         if adv_count > 1:
             raise RollError("Only one adv or dis operator is allowed per dice expression.")

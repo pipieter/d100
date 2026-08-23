@@ -20,11 +20,10 @@ class Selector:
 class Operator:
     IMMEDIATE: Incomplete
     op: OperatorCategory
-    sels: list["Selector"]
-    def __init__(self, op: OperatorCategory, sels: list["Selector"]) -> None: ...
+    sels: Selector
+    sel: Incomplete
+    def __init__(self, op: OperatorCategory, sel: Selector) -> None: ...
     @classmethod
     def new(cls, op: OperatorCategory, sel: Selector | None = None) -> Operator:
         """Create an operator from an op and a selector"""
-    def add_sels(self, sels: list["Selector"]) -> None:
-        """Add selectors to the operator."""
     def copy(self) -> Operator: ...

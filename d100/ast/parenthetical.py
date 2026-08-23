@@ -68,7 +68,7 @@ class ASTParenthetical(ASTNode):
     def roll(self, context: RollContext) -> tuple[Parenthetical, Sequence[Parenthetical]]:
         if self.operator:
             advantage = self.operator.op
-            roll_count = self.operator.sels[0].num
+            roll_count = self.operator.sel.num
         else:
             advantage = None
             roll_count = 1
@@ -95,7 +95,7 @@ class ASTParenthetical(ASTNode):
 
         if self.operator:
             adv = self.operator.op
-            num = self.operator.sels[0].num if self.operator.sels else None
+            num = self.operator.sel.num if self.operator.sel else None
             dist = apply_advantage_to_distribution(dist, adv, num)
 
         return dist
