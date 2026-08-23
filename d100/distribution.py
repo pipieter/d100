@@ -886,54 +886,76 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         self._dist = new_dist
 
     def apply_e(self, selector: Selector) -> None:
-        def should_explode(selector: Selector, value: int) -> bool:
-            if selector.cat == "h" or selector.cat == "l":
-                raise RollError(f"Invalid explode modifier selector '{selector.cat}'.")
+        if self._sides == 0:
+            return
 
-            return self._matches_selector(value, selector)
+        # Special scenario: exploding on the highest or lowest dice means we roll N times
+        if selector.cat in ["h", "l"]:
+            for _ in range(selector.num):
+                new_dist: defaultdict[DiscreteKey, float] = defaultdict(float)
+                for key in self._dist:
+                    odds = self._dist.get(key, 0)
+                    for roll in range(1, self._sides + 1):
+                        new_key = self._sort_key((*key, roll))
+                        new_odds = odds / self._sides
+                        new_dist[new_key] += new_odds
+                self._dist = new_dist
+            return
 
-        def apply_explode(
-            dist: defaultdict[DiscreteKey, float],
+        def apply_explode_to_key(
+            key: DiscreteKey,
             selector: Selector,
-            base_odds: float,
-            base_key: DiscreteKey,
-            cutoff: float = 1e-8,
+            die_index: int,
+            odds: float,
+            cutoff: float,
         ) -> defaultdict[DiscreteKey, float]:
             """
-            Recursively applies the explode operator to a single distribution to get the distribution
+            Recursively applies the explode operator to a single key to get the distribution
             of the exploded dice.
 
             Args:
-                dist (defaultdict[DiscreteKey, float]): The original distribution
+                key (DiscreteKey): The current key
                 selector (Selector): The exploding criteria
-                base_odds (float): The base odds of the current distribution. Should be initialized as 1.0.
+                die_index (int): The index of the current die that is being checked.
+                odds (float): The odds of the current key
                 base_key (DiscreteKey): The base key. Should be initialized as ().
                 cutoff (float, optional): The cut-off point after which explode is no longer applied. This is to prevent infinitely long executions. Defaults to 1e-6.
 
             Returns:
-                defaultdict[DiscreteKey, float]: The new distribution of the exploded dice.
+                defaultdict[DiscreteKey, float]: The new distribution of the exploded key.
             """
 
-            new_dist = defaultdict[DiscreteKey, float](float)
+            if odds < cutoff or die_index >= len(key):
+                result = defaultdict[DiscreteKey, float](float)
+                result[self._sort_key(key)] += odds
+                return result
 
-            for key in dist:
-                new_key = base_key + key
-                new_key = self._sort_key(new_key)
-                new_odds = base_odds * dist.get(key, 0)
-                if new_odds < cutoff:
-                    new_dist[new_key] = cutoff
-                    return new_dist
+            # If the current die does not match the selector, just continue onwards
+            if not selector.matches(key[die_index]):
+                return apply_explode_to_key(key, selector, die_index + 1, odds, cutoff)
 
-                if not should_explode(selector, sum(key)):
-                    new_dist[new_key] += new_odds
-                    continue
-                exploded = apply_explode(dist, selector, new_odds, new_key)
-                for key in exploded:
-                    new_dist[key] += exploded.get(key, 0)
+            # Otherwise, explode the current die
+            result = defaultdict[DiscreteKey, float](float)
+            for roll in range(1, self._sides + 1):
+                new_key = (*key, roll)
+                new_odds = odds / self._sides
+                new_dict = apply_explode_to_key(new_key, selector, die_index + 1, new_odds, cutoff)
 
-            return new_dist
+                for k, v in new_dict.items():
+                    result[self._sort_key(k)] += v
 
-        self._dist = apply_explode(self._dist, selector, 1.0, ())
+            return result
+
+        # It is theoretically possible for an expression to keep infinitely exploding (e.g. 1d8e8)
+        # To handle this, we determine a cutoff point after which we handle cases no longer.
+        cutoff = 1e-6
+        new_dist = defaultdict[DiscreteKey, float](float)
+        for key in self._dist:
+            odds = self._dist.get(key, 0)
+            for new_key, new_odds in apply_explode_to_key(key, selector, 0, odds, cutoff).items():
+                new_dist[self._sort_key(new_key)] += new_odds
+
+        self._dist = new_dist
 
     def apply_ra(self, selector: Selector) -> None:
         new_dist = defaultdict[DiscreteKey, float](float)
