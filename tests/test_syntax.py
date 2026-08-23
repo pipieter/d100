@@ -10,6 +10,7 @@ from d100 import roll
         "3d12+4",
         "  3    +    1d4  ",
         "1 * 1 * 1 * 1 * 1",
+        "1d8ro<=2"
     ],
 )
 def test_correct_syntax(expression: str):
