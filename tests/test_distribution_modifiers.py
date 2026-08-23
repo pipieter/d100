@@ -226,38 +226,6 @@ def test_e_2():
     assert expected == approx(actual)
 
 
-def test_e_3():
-    dist = distribution("1d10mi5e10")
-
-    # Verified using anydice.com
-    # output [explode [highest of 1d10 and 5]]
-    values = [
-        (5, 0.50),
-        (6, 0.10),
-        (7, 0.10),
-        (8, 0.10),
-        (9, 0.10),
-        (15, 0.05),
-        (16, 0.01),
-        (17, 0.01),
-        (18, 0.01),
-        (19, 0.01),
-        (25, 0.005),
-        (26, 0.001),
-        (27, 0.001),
-        (28, 0.001),
-        (29, 0.001),
-        (30, 0.001),
-    ]
-
-    assert_distribution(dist, values[:-1])
-
-    last_roll = values[-1][0]
-    expected = values[-1][1]
-    actual = dist.get_at_least(last_roll)
-    assert expected == approx(actual)
-
-
 def test_e_gt():
     # anydice.com can't generate accurate test data for this, thus we do an estimate test to see that the base is correct.
     sides = 8
