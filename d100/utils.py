@@ -34,7 +34,7 @@ def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
         if operator.op in ["adv", "dis"]:
             return False
 
-    d20.operations.append(Operator(adv, [Selector(None, count)]))
+    d20.operations.append(Operator(adv, Selector(None, count)))
     return True
 
 

@@ -62,34 +62,27 @@ class Operator:
     IMMEDIATE = {"mi", "ma"}
 
     op: OperatorCategory
-    sels: list["Selector"]
+    sels: Selector
 
-    def __init__(self, op: OperatorCategory, sels: list["Selector"]):
+    def __init__(self, op: OperatorCategory, sel: Selector):
         self.op = op
-        self.sels = sels
+        self.sel = sel
 
     @classmethod
     def new(cls, op: OperatorCategory, sel: "Selector | None" = None) -> "Operator":
         """Create an operator from an op and a selector"""
         if sel is None:
-            sels = []
-        else:
-            sels = [sel]
-        return cls(op, sels)
-
-    def add_sels(self, sels: list["Selector"]) -> None:
-        """Add selectors to the operator."""
-        self.sels.extend(sels)
+            sel = Selector(None, -1)
+        return cls(op, sel)
 
     def copy(self) -> "Operator":
-        sels = [sel.copy() for sel in self.sels]
-        return Operator(self.op, sels)
+        return Operator(self.op, self.sel.copy())
 
     def __str__(self):
-        if len(self.sels) == 0:
+        # Specific null operator case
+        if self.sel.cat is None and self.sel.num < 0:
             return self.op
-        return "".join([f"{self.op}{str(sel)}" for sel in self.sels])
+        return f"{self.op}{str(self.sel)}"
 
     def __repr__(self) -> str:
-        sels = "".join(repr(sel) for sel in self.sels)
-        return f"<Operator op={self.op} sels={sels} />"
+        return f"<Operator op={self.op} sel={repr(self.sel)} />"
