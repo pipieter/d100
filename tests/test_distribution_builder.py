@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from d100.ast.operators import Operator, OperatorCategory, Selector, SelectorCategory
+from d100.ast.operators import Operator, OperatorCategory, SelectorCategory, SelectorNew
 from d100.distribution import (
     ConvolutionDistributionBuilder,
     DiscreteDistributionBuilder,
@@ -18,7 +18,7 @@ from . import approx
 
 def operator(op: OperatorCategory, sel: tuple[SelectorCategory | None, int]):
     cat, num = sel
-    return Operator(op, [Selector(cat, num)])
+    return Operator(op, [SelectorNew(cat, num)])
 
 
 @pytest.mark.parametrize("count", [1, 2, 3, 4])
