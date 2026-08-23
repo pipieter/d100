@@ -20,10 +20,8 @@ from .ast.operators import (
     ExpressionCategory,
     Operator,
     Selector,
-    SelectorNew,
     SetCategory,
     UnaryOperator,
-    ValueSelector,
 )
 from .ast.parenthetical import ASTParenthetical
 from .ast.unop import ASTUnOp
@@ -105,10 +103,10 @@ class RollTransformer(Transformer[Any, Any]):
         return ASTDice(*dice)
 
     def selector(self, sel: Any) -> Selector:
-        return SelectorNew(*sel)
+        return Selector(*sel)
 
     def num_selector(self, sel: Any) -> Selector:
-        return ValueSelector(None, *sel)
+        return Selector(None, *sel)
 
     def dice_operator(self, opsel: tuple[DiceCategory, Selector]) -> Operator:
         op, sel = opsel
@@ -121,10 +119,10 @@ class RollTransformer(Transformer[Any, Any]):
     def advantage_operator(self, opsel: tuple[AdvantageCategory] | tuple[AdvantageCategory, int]) -> Operator:
         if len(opsel) == 1:
             (op,) = opsel
-            return Operator.new(op, ValueSelector(None, 2))
+            return Operator.new(op, Selector(None, 2))
 
         op, sel = opsel
-        return Operator.new(op, ValueSelector(None, sel))
+        return Operator.new(op, Selector(None, sel))
 
     def expression_operator(self, opsel: tuple[ExpressionCategory]) -> Operator:
         (op,) = opsel

@@ -8,7 +8,7 @@ from typing import Callable, Iterable, Optional
 
 import numpy as np
 
-from .ast.operators import Operator, Selector, SelectorNew, SetSelector, ValueSelector
+from .ast.operators import Operator, Selector
 from .errors import RollError
 
 
@@ -491,7 +491,7 @@ class AbstractDistributionBuilder(abc.ABC):
         Returns:
             bool: Whether the value matched the selector.
         """
-        if isinstance(selector, SetSelector):
+        if not selector.can_match(value):
             raise RollError(f"Cannot apply a {str(selector)} selector to a single element.")
 
         return selector.matches(value)
@@ -860,7 +860,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
                 _, *rest = dice
                 combinations = get_reroll_dice_possibilities(
-                    tuple(rest), sides, SelectorNew(selector.cat, selector.num - 1)
+                    tuple(rest), sides, Selector(selector.cat, selector.num - 1)
                 )
                 outcomes: list[DiscreteKey] = []
 
@@ -1049,7 +1049,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         if len(selectors) == 0:
             # if no selectors are given, the user most likely meant the '2' selector,
             # e.g. 1d20adv -> 1d20adv2
-            return [ValueSelector(None, 2)]
+            return [Selector(None, 2)]
 
         for selector in selectors:
             if selector.cat is not None:

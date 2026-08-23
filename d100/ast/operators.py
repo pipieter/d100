@@ -2,10 +2,7 @@ from typing import Literal
 
 UnaryOperator = Literal["+", "-"]
 BinaryOperator = Literal["+", "-", "*", "/", "//", "%", "<", ">", "==", ">=", "<=", "!="]
-
-SetSelectorCategory = Literal["h", "l"]
-ValueSelectorCategory = Literal["<", ">", "==", ">=", "<=", "!=", "", None]
-SelectorCategory = SetSelectorCategory | ValueSelectorCategory
+SelectorCategory = Literal["h", "l", "<", ">", "==", ">=", "<=", "!=", "", None]
 
 DiceCategory = Literal["rr", "ro", "ra", "rs", "e", "mi", "ma"]
 SetCategory = Literal["k", "p"]
@@ -15,36 +12,16 @@ AdvantageCategory = Literal["adv", "dis"]
 OperatorCategory = DiceCategory | SetCategory | ExpressionCategory | AdvantageCategory
 
 
-class SetSelector:
-    cat: SetSelectorCategory
+class Selector:
+    cat: SelectorCategory
     num: int
 
-    def __init__(self, cat: SetSelectorCategory, num: int) -> None:
+    def __init__(self, cat: SelectorCategory, num: int) -> None:
         self.cat = cat
         self.num = int(num)
 
-    def copy(self) -> "SetSelector":
-        return SetSelector(self.cat, self.num)
-
-    def __str__(self) -> str:
-        if self.cat:
-            return f"{self.cat}{self.num}"
-        return str(self.num)
-
-    def __repr__(self) -> str:
-        return f"<SetSelector cat={self.cat} num={self.num} />"
-
-
-class ValueSelector:
-    cat: ValueSelectorCategory
-    num: int
-
-    def __init__(self, cat: ValueSelectorCategory, num: int) -> None:
-        self.cat = cat
-        self.num = int(num)
-
-    def copy(self) -> "ValueSelector":
-        return ValueSelector(self.cat, self.num)
+    def copy(self) -> "Selector":
+        return Selector(self.cat, self.num)
 
     def __str__(self) -> str:
         if self.cat:
@@ -53,6 +30,9 @@ class ValueSelector:
 
     def __repr__(self) -> str:
         return f"<ValueSelector cat={self.cat} num={self.num} />"
+
+    def can_match(self, _: int) -> bool:
+        return self.cat not in ["h", "l"]
 
     def matches(self, value: int) -> bool:
         match self.cat:
@@ -74,14 +54,8 @@ class ValueSelector:
             case ">=":
                 return value >= self.num
 
-
-Selector = SetSelector | ValueSelector
-
-
-def SelectorNew(cat: ValueSelectorCategory | SetSelectorCategory, num: int) -> Selector:
-    if cat == "h" or cat == "l":
-        return SetSelector(cat, num)
-    return ValueSelector(cat, num)
+            case "h" | "l":
+                raise ValueError(f"Cannot apply matches to {str(self)}")
 
 
 class Operator:
