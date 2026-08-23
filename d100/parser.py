@@ -1,4 +1,5 @@
 import os
+import string
 import typing
 from collections.abc import MutableMapping
 from typing import Any, TypeGuard
@@ -147,26 +148,33 @@ class Parser:
             maybe_placeholders=True,
         )
 
+    @staticmethod
+    def _remove_whitespace(chars: str) -> str:
+        chars = chars.strip()
+        for ws in string.whitespace:
+            chars = chars.strip(ws)
+            chars = chars.replace(ws, "")
+        return chars
+
     def parse(self, expr: str | bytes, start: str | None = None) -> ASTExpression:
         """Parse an expression string to an expression AST tree."""
         if start is None:
             start = "expr"
 
+        clean_expr = self._remove_whitespace(str(expr))
         try:
-            expr = str(expr)
             # see if this expr is in cache
-            clean_expr = expr.replace(" ", "")
             if clean_expr in self._cache:
                 dice_tree = self._cache[clean_expr].copy()  # create a copy in case the user changes the tree
             else:
-                dice_tree = self._lark.parse(expr, start=start)  # type: ignore
+                dice_tree = self._lark.parse(clean_expr, start=start)  # type: ignore
                 dice_tree = typing.cast(ASTExpression, dice_tree)
                 self._cache[clean_expr] = dice_tree
             return dice_tree
         except lark.UnexpectedToken as ut:
-            raise RollSyntaxError(ut.line, ut.column, ut.token, ut.expected)
+            raise RollSyntaxError(clean_expr, ut.line, ut.column, ut.token, ut.expected)
         except lark.UnexpectedCharacters as uc:
-            raise RollSyntaxError(uc.line, uc.column, expr[uc.pos_in_stream], uc.allowed)
+            raise RollSyntaxError(clean_expr, uc.line, uc.column, clean_expr[uc.pos_in_stream], uc.allowed)
 
 
 if __name__ == "__main__":
