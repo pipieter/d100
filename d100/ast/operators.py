@@ -2,7 +2,10 @@ from typing import Literal
 
 UnaryOperator = Literal["+", "-"]
 BinaryOperator = Literal["+", "-", "*", "/", "//", "%", "<", ">", "==", ">=", "<=", "!="]
-SelectorCategory = Literal["<", ">", "h", "l"]
+
+SetSelectorCategory = Literal["h", "l"]
+ValueSelectorCategory = Literal["<", ">", "==", ">=", "<=", "!=", "", None]
+SelectorCategory = SetSelectorCategory | ValueSelectorCategory
 
 DiceCategory = Literal["rr", "ro", "ra", "rs", "e", "mi", "ma"]
 SetCategory = Literal["k", "p"]
@@ -12,16 +15,16 @@ AdvantageCategory = Literal["adv", "dis"]
 OperatorCategory = DiceCategory | SetCategory | ExpressionCategory | AdvantageCategory
 
 
-class Selector:
-    cat: SelectorCategory | None
+class SetSelector:
+    cat: SetSelectorCategory
     num: int
 
-    def __init__(self, cat: SelectorCategory | None, num: int) -> None:
+    def __init__(self, cat: SetSelectorCategory, num: int) -> None:
         self.cat = cat
         self.num = int(num)
 
-    def copy(self) -> "Selector":
-        return Selector(self.cat, self.num)
+    def copy(self) -> "SetSelector":
+        return SetSelector(self.cat, self.num)
 
     def __str__(self) -> str:
         if self.cat:
@@ -29,7 +32,56 @@ class Selector:
         return str(self.num)
 
     def __repr__(self) -> str:
-        return f"<Selector cat={self.cat} num={self.num} />"
+        return f"<SetSelector cat={self.cat} num={self.num} />"
+
+
+class ValueSelector:
+    cat: ValueSelectorCategory
+    num: int
+
+    def __init__(self, cat: ValueSelectorCategory, num: int) -> None:
+        self.cat = cat
+        self.num = int(num)
+
+    def copy(self) -> "ValueSelector":
+        return ValueSelector(self.cat, self.num)
+
+    def __str__(self) -> str:
+        if self.cat:
+            return f"{self.cat}{self.num}"
+        return str(self.num)
+
+    def __repr__(self) -> str:
+        return f"<ValueSelector cat={self.cat} num={self.num} />"
+
+    def matches(self, value: int) -> bool:
+        match self.cat:
+            case None | "" | "==":
+                return value == self.num
+
+            case "!=":
+                return value != self.num
+
+            case "<":
+                return value < self.num
+
+            case "<=":
+                return value <= self.num
+
+            case ">":
+                return value > self.num
+
+            case ">=":
+                return value >= self.num
+
+
+Selector = SetSelector | ValueSelector
+
+
+def SelectorNew(cat: ValueSelectorCategory | SetSelectorCategory, num: int) -> Selector:
+    if cat == "h" or cat == "l":
+        return SetSelector(cat, num)
+    return ValueSelector(cat, num)
 
 
 class Operator:

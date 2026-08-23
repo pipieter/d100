@@ -8,7 +8,7 @@ from typing import Callable, Iterable, Optional
 
 import numpy as np
 
-from .ast.operators import Operator, Selector
+from .ast.operators import Operator, Selector, SelectorNew, SetSelector, ValueSelector
 from .errors import RollError
 
 
@@ -491,18 +491,10 @@ class AbstractDistributionBuilder(abc.ABC):
         Returns:
             bool: Whether the value matched the selector.
         """
-        cat: str | None = selector.cat
+        if isinstance(selector, SetSelector):
+            raise RollError(f"Cannot apply a {str(selector)} selector to a single element.")
 
-        if cat in ["", None]:
-            return value == selector.num
-
-        if cat == "<":
-            return value < selector.num
-
-        if cat == ">":
-            return value > selector.num
-
-        raise RollError(f"Invalid operation found between value '{value}' and '{str(selector)}'")
+        return selector.matches(value)
 
     @staticmethod
     def _creates_infinite_rr_loop(count: int, sides: int, selector: Selector) -> bool:
@@ -519,23 +511,37 @@ class AbstractDistributionBuilder(abc.ABC):
         if count == 0:
             return False
 
-        # e.g. 1d6rrl1
-        if selector.cat in ["h", "l"]:
-            return selector.num > 0
+        match selector.cat:
+            # e.g. 1d6rrl1
+            case "h" | "l":
+                return selector.num > 0
 
-        # e.g. 1d6rr<7
-        if selector.cat == "<" and sides < selector.num:
-            return True
+            # e.g. 1d6rr<=7
+            case "<=":
+                return sides <= selector.num
 
-        # e.g. 1d6rr>0
-        if selector.cat == ">" and selector.num == 0:
-            return True
+            # e.g. 1d6rr<7
+            case "<":
+                return sides < selector.num
 
-        # Specific case, re-rolling a one on a one-sided die, 1d1rr1
-        if sides == 1 and selector.cat in [None, ""] and selector.num == 1:
-            return True
+            # A selector integer is always greater or equal than zero.
+            # in the expression 1d6rr>=0, the condition will always be met
+            # and will thus always be an infinite loop.
+            case ">=":
+                return True
 
-        return False
+            # e.g. 1d6rr>0
+            case ">":
+                return selector.num == 0
+
+            # The only way for 1dNrr==X to be an infinite loop is if both N and X equals 0 or 1
+            case None | "" | "==":
+                return (sides == 1 and selector.num == 1) or (sides == 0 and selector.num == 0)
+
+            case "!=":
+                return False
+
+        raise NotImplementedError(f"Unsupported selector category to determine infinite loops: '{selector.cat}'")
 
 
 class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
@@ -793,29 +799,19 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
     def apply_k(self, selectors: list[Selector]) -> None:
         def apply_k_to_key(key: DiscreteKey, selector: Selector) -> DiscreteKey:
-            if selector.cat is None:
-                # Keep all values matching exactly selector.num
-                return tuple([p for p in key if p == selector.num])
+            match selector.cat:
+                case "l":
+                    key = tuple(sorted(list(key), reverse=False))
+                    key = key[: selector.num]
+                    return key
 
-            if selector.cat == "<":
-                # Keep all values smaller than selector.num
-                return tuple([p for p in key if p < selector.num])
+                case "h":
+                    key = tuple(sorted(list(key), reverse=True))
+                    key = key[: selector.num]
+                    return key
 
-            if selector.cat == ">":
-                # Keep all values greater than selector.num
-                return tuple([p for p in key if p > selector.num])
-
-            if selector.cat == "l":
-                # Keep lowest selector.num values
-                key = tuple(sorted(list(key), reverse=False))
-                key = key[: selector.num]
-                return key
-
-            if selector.cat == "h":
-                # Keep highest selector.num values
-                key = tuple(sorted(list(key), reverse=True))
-                key = key[: selector.num]
-                return key
+                case _:
+                    return tuple(p for p in key if self._matches_selector(p, selector))
 
             raise RollError(f"Invalid keep modifier selector '{selector.cat}'.")
 
@@ -824,29 +820,19 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
     def apply_p(self, selectors: list[Selector]) -> None:
         def apply_p_to_key(key: DiscreteKey, selector: Selector) -> DiscreteKey:
-            if selector.cat is None:
-                # Drop all values matching exactly selector.num
-                return tuple([p for p in key if p != selector.num])
+            match selector.cat:
+                case "l":
+                    key = tuple(sorted(list(key), reverse=False))
+                    key = key[selector.num :]
+                    return key
 
-            if selector.cat == "<":
-                # Drop all values smaller than selector.num
-                return tuple([p for p in key if p >= selector.num])
+                case "h":
+                    key = tuple(sorted(list(key), reverse=True))
+                    key = key[selector.num :]
+                    return key
 
-            if selector.cat == ">":
-                # Drop all values greater than selector.num
-                return tuple([p for p in key if p <= selector.num])
-
-            if selector.cat == "l":
-                # Drop lowest selector.num values
-                key = tuple(sorted(list(key), reverse=False))
-                key = key[selector.num :]
-                return key
-
-            if selector.cat == "h":
-                # Drop highest selector.num values
-                key = tuple(sorted(list(key), reverse=True))
-                key = key[selector.num :]
-                return key
+                case _:
+                    return tuple(p for p in key if not self._matches_selector(p, selector))
 
             raise RollError(f"Invalid drop modifier selector '{selector.cat}'.")
 
@@ -854,9 +840,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             self._transform_keys(lambda key: apply_p_to_key(key, selector))
 
     def apply_ro(self, selectors: list[Selector]) -> None:
-        def get_reroll_dice_possibilities(
-            dice: DiscreteKey, sides: int, category: str | None, num: int
-        ) -> list[DiscreteKey]:
+        def get_reroll_dice_possibilities(dice: DiscreteKey, sides: int, selector: Selector) -> list[DiscreteKey]:
             """
             Get all re-roll possibilities in a dice. This generates all possible results where the values matching
             the selector are re-rolled.
@@ -865,17 +849,19 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
                 return [()]
 
             # Handle h and l separately, as they depend on the dice ordering
-            if category in ["h", "l"]:
-                if num <= 0:
+            if selector.cat == "h" or selector.cat == "l":
+                if selector.num <= 0:
                     return [dice]
 
-                if category == "h":
+                if selector.cat == "h":
                     dice = tuple(sorted(dice, reverse=True))
                 else:
                     dice = tuple(sorted(dice, reverse=False))
 
                 _, *rest = dice
-                combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num - 1)
+                combinations = get_reroll_dice_possibilities(
+                    tuple(rest), sides, SelectorNew(selector.cat, selector.num - 1)
+                )
                 outcomes: list[DiscreteKey] = []
 
                 for combination in combinations:
@@ -885,17 +871,15 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
                 return outcomes
 
             first, *rest = dice
-            combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num)
+            combinations = get_reroll_dice_possibilities(tuple(rest), sides, selector)
             outcomes = []
 
-            if (
-                (category is None and first == num)
-                or (category == ">" and first > num)
-                or (category == "<" and first < num)
-            ):
+            # If rerolling, add all possible outcomes
+            if self._matches_selector(first, selector):
                 for combination in combinations:
                     for roll in range(1, sides + 1):
                         outcomes.append((roll,) + combination)
+            # Otherwise, continue with the current roll
             else:
                 for combination in combinations:
                     outcomes.append((first,) + combination)
@@ -906,7 +890,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             new_dist = defaultdict[DiscreteKey, float](float)
             for key in self._dist:
                 odds = self._dist.get(key, 0)
-                rerolls = get_reroll_dice_possibilities(key, self._sides, selector.cat, selector.num)
+                rerolls = get_reroll_dice_possibilities(key, self._sides, selector)
                 for reroll in rerolls:
                     reroll_key = self._sort_key(reroll)
                     reroll_odds = odds / len(rerolls)
@@ -919,14 +903,10 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
     def apply_e(self, selectors: list[Selector]) -> None:
         def should_explode(selector: Selector, value: int) -> bool:
-            if selector.cat is None:
-                return value == selector.num
-            if selector.cat == ">":
-                return value > selector.num
-            if selector.cat == "<":
-                return value < selector.num
+            if selector.cat == "h" or selector.cat == "l":
+                raise RollError(f"Invalid explode modifier selector '{selector.cat}'.")
 
-            raise RollError(f"Invalid explode modifier selector '{selector.cat}'.")
+            return self._matches_selector(value, selector)
 
         def apply_explode(
             dist: defaultdict[DiscreteKey, float],
@@ -1069,7 +1049,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         if len(selectors) == 0:
             # if no selectors are given, the user most likely meant the '2' selector,
             # e.g. 1d20adv -> 1d20adv2
-            return [Selector(None, 2)]
+            return [ValueSelector(None, 2)]
 
         for selector in selectors:
             if selector.cat is not None:

@@ -1,11 +1,11 @@
 from collections.abc import Sequence
-from typing import Callable, Mapping, TypeVar
+from typing import Callable, Iterable, Mapping, TypeVar
 
 from lark import Token
 
 from .die import DiceSize, Die
 from .node import ASTNode, Number
-from .operators import AdvantageCategory, Operator, OperatorCategory, Selector
+from .operators import AdvantageCategory, Operator, OperatorCategory, Selector, SetSelector, ValueSelector
 from ..context import RollContext
 from ..distribution import ConvolutionDistributionBuilder, DiscreteDistributionBuilder, Distribution
 from ..errors import RollError, RollValueError
@@ -141,29 +141,22 @@ class Dice(Number):
         return out
 
     def select_single(self, selector: Selector) -> set[Die]:
-        select_functions = {
-            "l": self.select_lowest,
-            "h": self.select_highest,
-            "<": self.select_less_than,
-            ">": self.select_more_than,
-            None: self.select_literal,
-        }
-        return set(select_functions[selector.cat](selector.num))
+        if isinstance(selector, SetSelector):
+            return set(self.select_from_set_selector(selector))
 
-    def select_lowest(self, value: int) -> Sequence[Die]:
-        return sorted(self.keptset, key=lambda n: n.value)[:value]
+        return set(self.select_from_value_selector(selector))
 
-    def select_highest(self, value: int) -> Sequence[Die]:
-        return sorted(self.keptset, key=lambda n: n.value, reverse=True)[:value]
+    def select_from_set_selector(self, selector: SetSelector) -> Iterable[Die]:
+        if selector.cat == "h":
+            return sorted(self.keptset, key=lambda n: n.value, reverse=True)[: selector.num]
 
-    def select_less_than(self, value: int) -> Sequence[Die]:
-        return [n for n in self.keptset if n.value < value]
+        if selector.cat == "l":
+            return sorted(self.keptset, key=lambda n: n.value, reverse=False)[: selector.num]
 
-    def select_more_than(self, value: int) -> Sequence[Die]:
-        return [n for n in self.keptset if n.value > value]
+        raise NotImplementedError(f"select_from_set_selector not implemented for selector {str(selector)}")
 
-    def select_literal(self, value: int) -> Sequence[Die]:
-        return [n for n in self.keptset if n.value == value]
+    def select_from_value_selector(self, selector: ValueSelector) -> Iterable[Die]:
+        return [die for die in self.keptset if selector.matches(die.value)]
 
     # endregion ==== Selectro ====
 

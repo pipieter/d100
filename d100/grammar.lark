@@ -45,7 +45,7 @@ dice_expr: INTEGER? "d" DICE_VALUE
 ?num_selector: INTEGER
 
 DICE_VALUE: INTEGER | "%"
-SELTYPE: "l" | "h" | "<" | ">"
+SELTYPE: "l" | "h" | COMP_OPERATOR
 
 // whitespace
 _WS: /[ \t\f\r\n]/+

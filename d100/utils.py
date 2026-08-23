@@ -1,7 +1,7 @@
 from .ast.dice import ASTDice, Dice
 from .ast.expression import ASTExpression
 from .ast.node import Number
-from .ast.operators import AdvantageCategory, Operator, OperatorCategory, Selector
+from .ast.operators import AdvantageCategory, Operator, OperatorCategory, SelectorNew
 from .distribution import Distribution
 from .enums import Critical
 from .errors import RollError
@@ -34,7 +34,7 @@ def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
         if operator.op in ["adv", "dis"]:
             return False
 
-    d20.operations.append(Operator(adv, [Selector(None, count)]))
+    d20.operations.append(Operator(adv, [SelectorNew(None, count)]))
     return True
 
 
