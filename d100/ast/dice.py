@@ -184,6 +184,20 @@ class Dice(Number):
             die.reroll()
 
     def explode(self, selector: Selector) -> None:
+        # Special scenario: exploding on the highest or lowest dice means we roll N times
+        if selector.cat in ["h", "l"]:
+            for _ in range(selector.num):
+                candidates = [die for die in self.keptset if not die.exploded]
+                if selector.cat == "h":
+                    target_value = max(die.value for die in candidates)
+                else:
+                    target_value = max(die.value for die in candidates)
+                exploding_die = [die for die in candidates if die.value == target_value][0]
+                exploding_die.explode()
+                self.roll_another()
+            return
+
+        # Otherwise, repeatedly go over every non-exploded die and check if it needs to explode
         to_explode = self.select(selector)
         already_exploded: set[Die] = set()
 
