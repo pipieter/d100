@@ -5,7 +5,7 @@ from .ast.operators import (
     AdvantageCategory as AdvantageCategory,
     Operator as Operator,
     OperatorCategory as OperatorCategory,
-    SelectorNew as SelectorNew,
+    Selector as Selector,
 )
 from .distribution import Distribution as Distribution
 from .enums import Critical as Critical
