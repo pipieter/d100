@@ -22,8 +22,8 @@ class RollSyntaxError(RollError):
         self.expected = expected
 
         msg = (
-            f"Unexpected input in '{expr}' on line {line}, col {col}: expected {', '.join([str(ex) for ex in expected])}, "
-            f"got '{str(got)}'"
+            f"Unexpected input in '{expr}' on line {line}, col {col}: expected"
+            f" {', '.join([str(ex) for ex in expected])}, got '{str(got)}'"
         )
         super().__init__(msg)
 

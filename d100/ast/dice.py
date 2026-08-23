@@ -141,29 +141,15 @@ class Dice(Number):
         return out
 
     def select_single(self, selector: Selector) -> set[Die]:
-        select_functions = {
-            "l": self.select_lowest,
-            "h": self.select_highest,
-            "<": self.select_less_than,
-            ">": self.select_more_than,
-            None: self.select_literal,
-        }
-        return set(select_functions[selector.cat](selector.num))
+        if selector.cat == "h":
+            selected = sorted(self.keptset, key=lambda n: n.value, reverse=True)[: selector.num]
+            return set(selected)
 
-    def select_lowest(self, value: int) -> Sequence[Die]:
-        return sorted(self.keptset, key=lambda n: n.value)[:value]
+        if selector.cat == "l":
+            selected = sorted(self.keptset, key=lambda n: n.value, reverse=False)[: selector.num]
+            return set(selected)
 
-    def select_highest(self, value: int) -> Sequence[Die]:
-        return sorted(self.keptset, key=lambda n: n.value, reverse=True)[:value]
-
-    def select_less_than(self, value: int) -> Sequence[Die]:
-        return [n for n in self.keptset if n.value < value]
-
-    def select_more_than(self, value: int) -> Sequence[Die]:
-        return [n for n in self.keptset if n.value > value]
-
-    def select_literal(self, value: int) -> Sequence[Die]:
-        return [n for n in self.keptset if n.value == value]
+        return set(die for die in self.keptset if selector.matches(die.value))
 
     # endregion ==== Selectro ====
 

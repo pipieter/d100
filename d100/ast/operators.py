@@ -2,7 +2,7 @@ from typing import Literal
 
 UnaryOperator = Literal["+", "-"]
 BinaryOperator = Literal["+", "-", "*", "/", "//", "%", "<", ">", "==", ">=", "<=", "!="]
-SelectorCategory = Literal["<", ">", "h", "l"]
+SelectorCategory = Literal["h", "l", "<", ">", "==", ">=", "<=", "!=", "", None]
 
 DiceCategory = Literal["rr", "ro", "ra", "rs", "e", "mi", "ma"]
 SetCategory = Literal["k", "p"]
@@ -13,10 +13,10 @@ OperatorCategory = DiceCategory | SetCategory | ExpressionCategory | AdvantageCa
 
 
 class Selector:
-    cat: SelectorCategory | None
+    cat: SelectorCategory
     num: int
 
-    def __init__(self, cat: SelectorCategory | None, num: int) -> None:
+    def __init__(self, cat: SelectorCategory, num: int) -> None:
         self.cat = cat
         self.num = int(num)
 
@@ -29,7 +29,33 @@ class Selector:
         return str(self.num)
 
     def __repr__(self) -> str:
-        return f"<Selector cat={self.cat} num={self.num} />"
+        return f"<ValueSelector cat={self.cat} num={self.num} />"
+
+    def can_match(self, _: int) -> bool:
+        return self.cat not in ["h", "l"]
+
+    def matches(self, value: int) -> bool:
+        match self.cat:
+            case None | "" | "==":
+                return value == self.num
+
+            case "!=":
+                return value != self.num
+
+            case "<":
+                return value < self.num
+
+            case "<=":
+                return value <= self.num
+
+            case ">":
+                return value > self.num
+
+            case ">=":
+                return value >= self.num
+
+            case "h" | "l":
+                raise ValueError(f"Cannot apply matches to {str(self)}")
 
 
 class Operator:
