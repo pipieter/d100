@@ -2,7 +2,12 @@ import abc
 from collections.abc import Sequence
 from typing import Callable, Iterable
 
-from .ast.operators import Operator as Operator, Selector as Selector
+from .ast.operators import (
+    Operator as Operator,
+    Selector as Selector,
+    SelectorNew as SelectorNew,
+    ValueSelector as ValueSelector,
+)
 from .errors import RollError as RollError
 
 class Distribution:

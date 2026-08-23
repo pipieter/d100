@@ -14,8 +14,10 @@ from .ast.operators import (
     ExpressionCategory as ExpressionCategory,
     Operator as Operator,
     Selector as Selector,
+    SelectorNew as SelectorNew,
     SetCategory as SetCategory,
     UnaryOperator as UnaryOperator,
+    ValueSelector as ValueSelector,
 )
 from .ast.parenthetical import ASTParenthetical as ASTParenthetical
 from .ast.unop import ASTUnOp as ASTUnOp

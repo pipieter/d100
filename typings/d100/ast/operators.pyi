@@ -2,18 +2,31 @@ from _typeshed import Incomplete
 
 UnaryOperator: Incomplete
 BinaryOperator: Incomplete
-SelectorCategory: Incomplete
+SetSelectorCategory: Incomplete
+ValueSelectorCategory: Incomplete
+SelectorCategory = SetSelectorCategory | ValueSelectorCategory
 DiceCategory: Incomplete
 SetCategory: Incomplete
 ExpressionCategory: Incomplete
 AdvantageCategory: Incomplete
 OperatorCategory = DiceCategory | SetCategory | ExpressionCategory | AdvantageCategory
 
-class Selector:
-    cat: SelectorCategory | None
+class SetSelector:
+    cat: SetSelectorCategory
     num: int
-    def __init__(self, cat: SelectorCategory | None, num: int) -> None: ...
-    def copy(self) -> Selector: ...
+    def __init__(self, cat: SetSelectorCategory, num: int) -> None: ...
+    def copy(self) -> SetSelector: ...
+
+class ValueSelector:
+    cat: ValueSelectorCategory
+    num: int
+    def __init__(self, cat: ValueSelectorCategory, num: int) -> None: ...
+    def copy(self) -> ValueSelector: ...
+    def matches(self, value: int) -> bool: ...
+
+Selector = SetSelector | ValueSelector
+
+def SelectorNew(cat: ValueSelectorCategory | SetSelectorCategory, num: int) -> Selector: ...
 
 class Operator:
     IMMEDIATE: Incomplete
