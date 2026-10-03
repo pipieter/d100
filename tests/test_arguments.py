@@ -2,9 +2,10 @@ from typing import Literal
 
 import pytest
 
-from d100 import parse, roll, utils
+from d100 import parse, roll
 from d100.ast.expression import ASTExpression
 from d100.errors import RollError
+from d100.utils.advantage import add_advantage_to_d20_in_expression
 
 
 def test_advantage_d20():
@@ -36,7 +37,7 @@ def test_advantage_d20():
     assert r.expression == "1d20dis2"
 
     expr = parse("1d20+1d20+6")
-    r = roll(utils.add_advantage_to_d20_in_expression(expr, "adv", 2))
+    r = roll(add_advantage_to_d20_in_expression(expr, "adv", 2))
     assert 8 <= r.total <= 46
     assert len(r.rolls) == 2
     assert len(r.warnings) == 0
@@ -47,11 +48,11 @@ def test_advantage_d20():
 def test_advantage_non_d20():
     with pytest.raises(RollError):
         expr = parse("1d6")
-        utils.add_advantage_to_d20_in_expression(expr, "adv", 2)
+        add_advantage_to_d20_in_expression(expr, "adv", 2)
 
     with pytest.raises(RollError):
         expr = parse("1d6")
-        utils.add_advantage_to_d20_in_expression(expr, "dis", 2)
+        add_advantage_to_d20_in_expression(expr, "dis", 2)
 
 
 @pytest.mark.parametrize(
@@ -68,14 +69,14 @@ def test_advantage_non_d20():
     ],
 )
 def test_advantage_roll_count(rolls: int | Literal[False], expr: str | ASTExpression):
-    expr = parse(expr)
+    parsed = parse(expr)
 
     if not rolls:
         with pytest.raises(RollError):
-            expr = utils.add_advantage_to_d20_in_expression(expr, "adv", 2)
+            parsed = add_advantage_to_d20_in_expression(parsed, "adv", 2)
     else:
-        expr = utils.add_advantage_to_d20_in_expression(expr, "adv", 2)
-        r = roll(expr)
+        parsed = add_advantage_to_d20_in_expression(parsed, "adv", 2)
+        r = roll(parsed)
         assert len(r.rolls) == rolls
         assert r.total == max(rr.total for rr in r.rolls)
 
@@ -84,5 +85,5 @@ def test_advantage_roll_count(rolls: int | Literal[False], expr: str | ASTExpres
 def test_advantage_to_already_existing_fails(expr: str | ASTExpression):
     # if advantage is requested for an expression that already has advantage, a warning is thrown
     with pytest.raises(RollError):
-        expr = parse(expr)
-        utils.add_advantage_to_d20_in_expression(expr, "adv", 2)
+        parsed = parse(expr)
+        add_advantage_to_d20_in_expression(parsed, "adv", 2)
