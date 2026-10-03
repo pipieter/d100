@@ -6,8 +6,13 @@ from lark import Token
 from .die import DiceSize, Die
 from .node import ASTNode, Number
 from .operators import AdvantageCategory, Operator, OperatorCategory, Selector
+from ..ast.parenthetical import ASTParenthetical, Parenthetical
 from ..context import RollContext
-from ..distribution import ConvolutionDistributionBuilder, DiscreteDistributionBuilder, Distribution
+from ..distribution import (
+    Distribution,
+    distribution_from_constant_dice_count,
+    distribution_from_variable_dice_count,
+)
 from ..errors import RollError, RollValueError
 from ..utils.advantage import find_from_advantage
 
@@ -16,7 +21,7 @@ class Dice(Number):
     """Represents a set of dice."""
 
     dice: list[Die]
-    count: int
+    count: int | Parenthetical
     size: DiceSize
     operators: list["Operator"]
     _context: RollContext
@@ -24,7 +29,7 @@ class Dice(Number):
     def __init__(
         self,
         dice: list[Die],
-        count: int,
+        count: int | Parenthetical,
         size: DiceSize,
         operators: list["Operator"],
         ast: ASTNode,
@@ -40,7 +45,12 @@ class Dice(Number):
 
     @classmethod
     def _new_single(cls, ast: "ASTDice", context: RollContext) -> "Dice":
-        num = ast.num
+        if isinstance(ast.num, int):
+            num = ast.num
+        else:
+            rolled, _ = ast.num.roll(context)
+            num = rolled.total
+
         size = ast.size
         dice: list[Die] = []
         operators = ast.operations
@@ -251,17 +261,23 @@ class Dice(Number):
 class ASTDice(ASTNode):
     """A dice is a collection of die with or without operators."""
 
-    num: int
+    num: int | ASTParenthetical
     size: DiceSize
     operations: list[Operator]
 
-    def __init__(self, num: int | Token, size: int | str | Token, *operations: Operator):
+    def __init__(self, num: int | Token | ASTParenthetical, size: int | str | Token, *operations: Operator):
         super().__init__()
-        self.num = int(num)
+
+        if isinstance(num, Token):
+            self.num = int(num)
+        else:
+            self.num = num
+
         if str(size) == "%":
             self.size = "%"
         else:
             self.size = int(size)
+
         self.operations = list(operations)
         self._validate_operations()
 
@@ -301,20 +317,15 @@ class ASTDice(ASTNode):
         return Dice.new(self, context)
 
     def distribution(self) -> Distribution:
-        count = self.num
         sides = self._sides()
         operations = self.operations
 
-        contains_non_convolution_operation = any(
-            not ConvolutionDistributionBuilder.supports_operation(op) for op in operations
-        )
-
-        if contains_non_convolution_operation:
-            builder = DiscreteDistributionBuilder(count, sides, operations)
+        if isinstance(self.num, int):
+            count = self.num
+            return distribution_from_constant_dice_count(count, sides, operations)
         else:
-            builder = ConvolutionDistributionBuilder(count, sides, operations)
-
-        return builder.distribution()
+            count = self.num.distribution()
+            return distribution_from_variable_dice_count(count, sides, operations)
 
     @property
     def is_comparison(self) -> bool:
@@ -324,5 +335,3 @@ class ASTDice(ASTNode):
         if self.num == count and self.size == size:
             return self
         return None
-
-

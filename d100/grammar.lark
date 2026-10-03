@@ -18,11 +18,12 @@ M_OP: "*" | "//" | "/" | "%"
 U_OP: "+" | "-"
 
 // numbers
-?num_expr: (parenthetical | dice | literal)
+?num_expr: (parenthetical_expr | dice | literal)
 
 literal: INTEGER | DECIMAL
 
-parenthetical: "(" _WS? num _WS? ")" advantage_operator?
+parenthetical: "(" _WS? num _WS? ")"
+parenthetical_expr: parenthetical advantage_operator?
 
 // dice
 ?dice: dice_expr dice_op*
@@ -39,11 +40,12 @@ dice_operator: DICE_OPERATOR selector
 advantage_operator: ADVANTAGE_OPERATOR num_selector?
 expression_operator: EXPRESSION_OPERATOR
 
-dice_expr: INTEGER? "d" DICE_VALUE
+dice_expr: dice_count? "d" DICE_VALUE
 
 ?selector: [SELTYPE] INTEGER
 ?num_selector: INTEGER
 
+dice_count: INTEGER | parenthetical
 DICE_VALUE: INTEGER | "%"
 SELTYPE: "l" | "h" | COMP_OPERATOR
 
