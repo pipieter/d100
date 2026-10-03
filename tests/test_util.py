@@ -2,6 +2,7 @@ import pytest
 
 from d100 import parse
 from d100.ast.dice import ASTDice
+from d100.utils.find import find_d20
 
 
 @pytest.mark.parametrize(
@@ -22,7 +23,7 @@ from d100.ast.dice import ASTDice
 )
 def test_context_d20(has_d20: bool, expr: str):
     tree = parse(expr)
-    d20 = tree.find_d20()
+    d20 = find_d20(tree)
 
     if has_d20:
         assert d20 is not None

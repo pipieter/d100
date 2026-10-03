@@ -4,12 +4,13 @@ import dataclasses
 import random
 from typing import Optional
 
-from . import utils
 from .ast.node import ASTNode, Number
 from .context import RollContext
 from .enums import Critical
 from .rand import random_impl
 from .stringifier import SimpleStringifier, Stringifier
+from .utils.crit import determine_crit_type
+from .utils.find import find_d20
 
 
 @dataclasses.dataclass
@@ -92,7 +93,7 @@ class Roller:
         if stringifier is None:
             stringifier = SimpleStringifier()
 
-        d20 = node.find_d20()
+        d20 = find_d20(node)
         context = RollContext(self._rng)
         warnings: list[str] = []
 
@@ -104,15 +105,10 @@ class Roller:
         if len(die) == 0:
             warnings.append("Expression did not contain any dice.")
 
-        results = [
-            SingleRollResult(
-                ast=node,
-                roll=roll,
-                stringifier=stringifier,
-                crit=utils.determine_crit_type(roll, roll.find_from_ast(d20)),
-            )
-            for roll in rolls
-        ]
+        # Determine crit type
+        crit = determine_crit_type(roll, roll.find_from_ast(d20))
+
+        results = [SingleRollResult(ast=node, roll=roll, stringifier=stringifier, crit=crit) for roll in rolls]
         result = results[rolls.index(roll)]
 
         return RollResult(

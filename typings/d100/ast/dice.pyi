@@ -1,7 +1,6 @@
 from collections.abc import Sequence
-from typing import TypeVar
 
-from lark import Token as Token
+from lark import Token
 
 from .die import DiceSize as DiceSize, Die as Die
 from .node import ASTNode as ASTNode, Number as Number
@@ -11,29 +10,23 @@ from .operators import (
     OperatorCategory as OperatorCategory,
     Selector as Selector,
 )
+from ..ast.parenthetical import ASTParenthetical as ASTParenthetical, Parenthetical as Parenthetical
 from ..context import RollContext as RollContext
-from ..distribution import (
-    ConvolutionDistributionBuilder as ConvolutionDistributionBuilder,
-    DiscreteDistributionBuilder as DiscreteDistributionBuilder,
-    Distribution as Distribution,
-)
+from ..distribution import Distribution as Distribution
 from ..errors import RollError as RollError, RollValueError as RollValueError
-
-TNumber = TypeVar("TNumber", bound=Number)
-
-def find_from_advantage(rolls: Sequence[TNumber], adv: OperatorCategory | None) -> TNumber: ...
+from ..utils.advantage import find_from_advantage as find_from_advantage
 
 class Dice(Number):
     """Represents a set of dice."""
 
     dice: list[Die]
-    count: int
+    count: int | Parenthetical
     size: DiceSize
     operators: list["Operator"]
     def __init__(
         self,
         dice: list[Die],
-        count: int,
+        count: int | Parenthetical,
         size: DiceSize,
         operators: list["Operator"],
         ast: ASTNode,
@@ -42,20 +35,24 @@ class Dice(Number):
     @classmethod
     def new(cls, ast: ASTDice, context: RollContext) -> tuple["Dice", list["Dice"]]:
         """Roll a new set of dice."""
+
     @property
     def keptset(self) -> Sequence[Die]:
         """Return a list of all dice that were not dropped."""
+
     @property
     def total(self) -> int: ...
     @property
     def children(self) -> Sequence[Number]: ...
     def roll_another(self, negative: bool = False) -> None:
         """Roll another die and add it to the dice set."""
+
     def copy(self) -> Dice: ...
     def extract_dice(self) -> Sequence[Die]: ...
     def select(self, selector: Selector) -> set[Die]: ...
     def operate(self, operator: Operator) -> None:
         """Apply an operator to the dice set."""
+
     def keep(self, selector: Selector) -> None: ...
     def drop(self, selector: Selector) -> None: ...
     def reroll(self, selector: Selector) -> None: ...
@@ -70,10 +67,10 @@ class Dice(Number):
 class ASTDice(ASTNode):
     """A dice is a collection of die with or without operators."""
 
-    num: int
+    num: int | ASTParenthetical
     size: DiceSize
     operations: list[Operator]
-    def __init__(self, num: int | Token, size: int | str | Token, *operations: Operator) -> None: ...
+    def __init__(self, num: int | Token | ASTParenthetical, size: int | str | Token, *operations: Operator) -> None: ...
     @property
     def children(self) -> Sequence[ASTNode]: ...
     def copy(self) -> ASTDice: ...

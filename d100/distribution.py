@@ -1070,3 +1070,27 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
     def apply_dis(self, selector: Selector) -> None:
         original = self._dist.copy()
         self._apply_adv_operator(original, selector, lambda a, b: a < b)
+
+
+def distribution_from_constant_dice_count(count: int, sides: int, operations: list[Operator]) -> Distribution:
+    contains_non_convolution_operation = any(
+        not ConvolutionDistributionBuilder.supports_operation(op) for op in operations
+    )
+    if contains_non_convolution_operation:
+        builder = DiscreteDistributionBuilder(count, sides, operations)
+    else:
+        builder = ConvolutionDistributionBuilder(count, sides, operations)
+
+    return builder.distribution()
+
+
+def distribution_from_variable_dice_count(counts: Distribution, sides: int, operations: list[Operator]) -> Distribution:
+    rolls = defaultdict[int, float](float)
+
+    for count in counts.keys():
+        count_dist = distribution_from_constant_dice_count(count, sides, operations)
+
+        for roll in count_dist.keys():
+            rolls[roll] += count_dist.get(roll) * counts.get(count)
+
+    return Distribution(dict(rolls))

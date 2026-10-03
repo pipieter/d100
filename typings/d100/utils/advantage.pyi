@@ -1,17 +1,18 @@
-from .ast.dice import ASTDice as ASTDice, Dice as Dice
-from .ast.expression import ASTExpression as ASTExpression
-from .ast.node import Number as Number
-from .ast.operators import (
+from typing import Sequence, TypeVar
+
+from ..ast.expression import ASTExpression as ASTExpression
+from ..ast.node import Number as Number
+from ..ast.operators import (
     AdvantageCategory as AdvantageCategory,
     Operator as Operator,
     OperatorCategory as OperatorCategory,
     Selector as Selector,
 )
-from .distribution import Distribution as Distribution
-from .enums import Critical as Critical
-from .errors import RollError as RollError
+from ..distribution import Distribution as Distribution
+from ..errors import RollError as RollError
 
-def determine_crit_type(root: Number, d20: Number | None) -> Critical: ...
+TNumber = TypeVar("TNumber", bound=Number)
+
 def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCategory, count: int) -> ASTExpression:
     """
     Add advantage to the d20 in an expression. This does not add advantage to
@@ -31,3 +32,4 @@ def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCatego
     """
 
 def apply_advantage_to_distribution(distribution: Distribution, adv: OperatorCategory | None, num: int | None): ...
+def find_from_advantage(rolls: Sequence[TNumber], adv: OperatorCategory | None) -> TNumber: ...

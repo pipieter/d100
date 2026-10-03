@@ -82,13 +82,16 @@ class RollTransformer(Transformer[Any, Any]):
 
         raise SyntaxError(f"Unsupported literal type {value.type}")
 
-    def parenthetical(self, num: tuple[ASTNode] | tuple[ASTNode, Operator]) -> ASTParenthetical:
+    def parenthetical(self, num: list[ASTNode]) -> ASTParenthetical:
+        return ASTParenthetical(num[0], None)
+
+    def parenthetical_expr(self, num: tuple[ASTParenthetical] | tuple[ASTParenthetical, Operator]) -> ASTParenthetical:
         if len(num) == 1:
             (value,) = num
-            return ASTParenthetical(value, None)
+            return value.copy()
         else:
             value, operator = num
-            return ASTParenthetical(value, operator)
+            return ASTParenthetical(value.value, operator)
 
     def dice(self, opdice: Any) -> ASTDice:
         dice, *operations = opdice
@@ -127,6 +130,9 @@ class RollTransformer(Transformer[Any, Any]):
     def expression_operator(self, opsel: tuple[ExpressionCategory]) -> Operator:
         (op,) = opsel
         return Operator.new(op)
+
+    def dice_count(self, value: list[int | ASTParenthetical]) -> int | ASTParenthetical:
+        return value[0]
 
 
 class Parser:

@@ -2,8 +2,7 @@ import abc
 from collections.abc import Sequence
 from typing import Self
 
-from .dice import ASTDice as ASTDice
-from .die import DiceSize as DiceSize, Die as Die
+from .die import Die as Die
 from ..context import RollContext as RollContext
 from ..distribution import Distribution as Distribution
 
@@ -49,7 +48,3 @@ class ASTNode(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def is_comparison(self) -> bool:
         """Return whether or not the node is a binary comparison."""
-    @abc.abstractmethod
-    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
-        """Find the first standalone dice object with a number of sides and a specific size."""
-    def find_d20(self) -> ASTDice | None: ...

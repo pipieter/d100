@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 
-from .dice import ASTDice as ASTDice
-from .die import DiceSize as DiceSize, Die as Die
+from .die import Die as Die
 from .node import ASTNode as ASTNode, Number as Number
 from ..context import RollContext as RollContext
 from ..distribution import Distribution as Distribution
@@ -32,4 +31,3 @@ class ASTLiteral(ASTNode):
     def distribution(self) -> Distribution: ...
     @property
     def is_comparison(self) -> bool: ...
-    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None: ...

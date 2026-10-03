@@ -1,13 +1,15 @@
 from collections.abc import Sequence
 
-from .dice import ASTDice as ASTDice, find_from_advantage as find_from_advantage
-from .die import DiceSize as DiceSize, Die as Die
+from .die import Die as Die
 from .node import ASTNode as ASTNode, Number as Number
 from .operators import AdvantageCategory as AdvantageCategory, Operator as Operator
 from ..context import RollContext as RollContext
 from ..distribution import Distribution as Distribution
 from ..errors import RollError as RollError
-from ..utils import apply_advantage_to_distribution as apply_advantage_to_distribution
+from ..utils.advantage import (
+    apply_advantage_to_distribution as apply_advantage_to_distribution,
+    find_from_advantage as find_from_advantage,
+)
 
 class Parenthetical(Number):
     """Parentheticals contain values between parentheses."""
@@ -34,4 +36,3 @@ class ASTParenthetical(ASTNode):
     def distribution(self) -> Distribution: ...
     @property
     def is_comparison(self) -> bool: ...
-    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None: ...

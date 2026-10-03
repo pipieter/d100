@@ -1,12 +1,13 @@
 import dataclasses
 import random
 
-from . import utils as utils
 from .ast.node import ASTNode as ASTNode, Number as Number
 from .context import RollContext as RollContext
 from .enums import Critical as Critical
 from .rand import random_impl as random_impl
 from .stringifier import SimpleStringifier as SimpleStringifier, Stringifier as Stringifier
+from .utils.crit import determine_crit_type as determine_crit_type
+from .utils.find import find_d20 as find_d20
 
 @dataclasses.dataclass
 class SingleRollResult:

@@ -332,3 +332,13 @@ def test_parenthesis_advantage():
     assert len(result.rolls) == 16
     assert result.total in (rr.total for rr in result.rolls)
     assert result.expression == expr
+
+
+def test_nested_dice():
+    expr = "((1d6)d6)d6"
+
+    # Tested multiple times due to the variance
+    for _ in range(10_000):
+        result = roll(expr)
+        assert len(result.rolls) == 1
+        assert 1 <= result.total <= 6**3
