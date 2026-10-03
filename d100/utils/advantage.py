@@ -1,41 +1,12 @@
-from .ast.dice import ASTDice, Dice
-from .ast.expression import ASTExpression
-from .ast.node import Number
-from .ast.operators import AdvantageCategory, Operator, OperatorCategory, Selector
-from .distribution import Distribution
-from .enums import Critical
-from .errors import RollError
+from typing import Sequence, TypeVar
 
+from ..ast.expression import ASTExpression
+from ..ast.node import Number
+from ..ast.operators import AdvantageCategory, Operator, OperatorCategory, Selector
+from ..distribution import Distribution
+from ..errors import RollError
 
-def determine_crit_type(root: Number, d20: Number | None) -> Critical:
-    if isinstance(d20, Dice):
-        dice = d20.keptset
-    else:
-        return Critical.NONE
-
-    if len(dice) != 1 or d20.size != 20:
-        return Critical.NONE
-
-    if dice[0].value == 1:
-        return Critical.FAIL
-
-    if dice[0].value == 20:
-        return Critical.CRIT
-
-    if root.total == 20 and dice[0].value != 20:
-        return Critical.DIRTY
-
-    return Critical.NONE
-
-
-def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
-    # Check if the dice already has adv or dis
-    for operator in d20.operations:
-        if operator.op in ["adv", "dis"]:
-            return False
-
-    d20.operations.append(Operator(adv, Selector(None, count)))
-    return True
+TNumber = TypeVar("TNumber", bound=Number)
 
 
 def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCategory, count: int) -> ASTExpression:
@@ -55,10 +26,20 @@ def add_advantage_to_d20_in_expression(expr: ASTExpression, adv: AdvantageCatego
     Returns:
         ASTExpression: The resulting expression with the advantage.
     """
+    from .find import find_d20
+    from ..ast.dice import ASTDice
+
+    def _add_adv_operator(d20: ASTDice, adv: AdvantageCategory, count: int) -> bool:
+        # Check if the dice already has adv or dis
+        for operator in d20.operations:
+            if operator.op in ["adv", "dis"]:
+                return False
+
+        d20.operations.append(Operator(adv, Selector(None, count)))
+        return True
 
     expr = expr.copy()  # Don't modify the original expression
-
-    d20 = expr.find_d20()
+    d20 = find_d20(expr)
 
     if d20 is None:
         raise RollError("Could not find a valid d20 to add advantage to.")
@@ -83,3 +64,12 @@ def apply_advantage_to_distribution(distribution: Distribution, adv: OperatorCat
         return distribution.disadvantage(num)
 
     raise RollError(f"Unknown advantage type: {adv}")
+
+
+def find_from_advantage(rolls: Sequence[TNumber], adv: OperatorCategory | None) -> TNumber:
+    if adv == "adv":
+        return sorted(rolls, key=lambda r: r.total, reverse=True)[0]
+    elif adv == "dis":
+        return sorted(rolls, key=lambda r: r.total, reverse=False)[0]
+
+    return rolls[0]

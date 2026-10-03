@@ -1,19 +1,13 @@
 import math
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Callable, Mapping
+from typing import Callable, Mapping
 
-from .dice import ASTDice
 from .die import Die
 from .node import ASTNode, Number
 from .operators import BinaryOperator
 from ..context import RollContext
 from ..distribution import Distribution
 from ..errors import RollError, RollValueError
-
-if TYPE_CHECKING:
-    from .die import DiceSize
-else:
-    DiceSize = Any
 
 
 class BinOp(Number):
@@ -132,15 +126,3 @@ class ASTBinOp(ASTNode):
     @property
     def is_comparison(self) -> bool:
         return self.op in {">", "<", ">=", "<=", "==", "!="}
-
-    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
-        if self.op not in ["-", "+"]:
-            return None
-
-        if (left := self.left.find_dice(count, size)) is not None:
-            return left
-
-        if (right := self.right.find_dice(count, size)) is not None:
-            return right
-
-        return None

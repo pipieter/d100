@@ -1,14 +1,13 @@
 from collections.abc import Sequence
 from typing import get_args
 
-from .dice import ASTDice, find_from_advantage
-from .die import DiceSize, Die
+from .die import Die
 from .node import ASTNode, Number
 from .operators import AdvantageCategory, Operator
 from ..context import RollContext
 from ..distribution import Distribution
 from ..errors import RollError
-from ..utils import apply_advantage_to_distribution
+from ..utils.advantage import apply_advantage_to_distribution, find_from_advantage
 
 
 class Parenthetical(Number):
@@ -103,6 +102,3 @@ class ASTParenthetical(ASTNode):
     @property
     def is_comparison(self) -> bool:
         return self.value.is_comparison
-
-    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
-        return self.value.find_dice(count, size)

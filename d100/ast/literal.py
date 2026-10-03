@@ -2,8 +2,7 @@ import math
 from collections.abc import Sequence
 from typing import Union
 
-from .dice import ASTDice
-from .die import DiceSize, Die
+from .die import Die
 from .node import ASTNode, Number
 from ..context import RollContext
 from ..distribution import Distribution
@@ -74,6 +73,3 @@ class ASTLiteral(ASTNode):
     @property
     def is_comparison(self) -> bool:
         return False
-
-    def find_dice(self, count: int, size: DiceSize) -> ASTDice | None:
-        return None

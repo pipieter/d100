@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Callable, Mapping, TypeVar
+from typing import Callable, Mapping
 
 from lark import Token
 
@@ -9,17 +9,7 @@ from .operators import AdvantageCategory, Operator, OperatorCategory, Selector
 from ..context import RollContext
 from ..distribution import ConvolutionDistributionBuilder, DiscreteDistributionBuilder, Distribution
 from ..errors import RollError, RollValueError
-
-TNumber = TypeVar("TNumber", bound=Number)
-
-
-def find_from_advantage(rolls: Sequence[TNumber], adv: OperatorCategory | None) -> TNumber:
-    if adv == "adv":
-        return sorted(rolls, key=lambda r: r.total, reverse=True)[0]
-    elif adv == "dis":
-        return sorted(rolls, key=lambda r: r.total, reverse=False)[0]
-
-    return rolls[0]
+from ..utils.advantage import find_from_advantage
 
 
 class Dice(Number):
@@ -334,3 +324,5 @@ class ASTDice(ASTNode):
         if self.num == count and self.size == size:
             return self
         return None
+
+
