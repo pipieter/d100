@@ -333,6 +333,7 @@ def test_parenthesis_advantage():
     assert result.total in (rr.total for rr in result.rolls)
     assert result.expression == expr
 
+
 def test_nested_dice():
     expr = "((1d6)d6)d6"
 

@@ -22,4 +22,3 @@ def determine_crit_type(root: Number, d20: Number | None) -> Critical:
         return Critical.DIRTY
 
     return Critical.NONE
-

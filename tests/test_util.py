@@ -2,7 +2,6 @@ import pytest
 
 from d100 import parse
 from d100.ast.dice import ASTDice
-
 from d100.utils.find import find_d20
 
 

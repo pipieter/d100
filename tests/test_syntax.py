@@ -21,14 +21,7 @@ def test_correct_syntax(expression: str):
 
 @pytest.mark.parametrize(
     "expression",
-    [
-        "1d",
-        "3d12mi",
-        "  *    1d4  ",
-        "1 * 1 * 1 * 1 * 1 *",
-        "(1d6)adv2d6"
-        "1d(1d6)"
-    ],
+    ["1d", "3d12mi", "  *    1d4  ", "1 * 1 * 1 * 1 * 1 *", "(1d6)adv2d61d(1d6)"],
 )
 def test_incorrect_syntax(expression: str):
     with pytest.raises(Exception):
