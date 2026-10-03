@@ -82,7 +82,7 @@ class RollTransformer(Transformer[Any, Any]):
 
         raise SyntaxError(f"Unsupported literal type {value.type}")
 
-    def parenthetical(self, num: list[ASTNode]):
+    def parenthetical(self, num: list[ASTNode]) -> ASTParenthetical:
         return ASTParenthetical(num[0], None)
 
     def parenthetical_expr(self, num: tuple[ASTParenthetical] | tuple[ASTParenthetical, Operator]) -> ASTParenthetical:
