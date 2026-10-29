@@ -1,11 +1,12 @@
 import pytest
 
-from d100 import roll
+from d100 import parse, roll
 from d100.ast.expression import Expression
 from d100.ast.node import ASTNode
 from d100.enums import Critical
 from d100.errors import RollError, RollSyntaxError, RollValueError, TooManyRolls
-from d100.roll import RollResult
+from d100.roll import Roller, RollResult
+from .util import FixedRandom
 
 
 def r(e: str):
@@ -94,6 +95,24 @@ def test_crit():
     while result.total != 20:
         result = roll("1d20+1d4+3")
     assert result.roll.crit == Critical.DIRTY
+
+
+@pytest.mark.parametrize(
+    "expression,values,expected_crits",
+    [
+        ("1d20adv", [20, 10], [Critical.CRIT, Critical.NONE]),
+        ("1d20dis", [1, 10], [Critical.FAIL, Critical.NONE]),
+    ],
+)
+def test_crit_is_determined_per_advantage_roll(
+    expression: str,
+    values: list[int],
+    expected_crits: list[Critical],
+):
+    result = Roller(FixedRandom(values)).roll(parse(expression))
+
+    assert [single_roll.crit for single_roll in result.rolls] == expected_crits
+    assert result.roll.crit == expected_crits[0]
 
 
 # node tests

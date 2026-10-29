@@ -19,8 +19,13 @@ class SingleRollResult:
 
     ast: ASTNode
     roll: Number
-    crit: Critical
     stringifier: Stringifier
+
+    @property
+    def crit(self) -> Critical:
+        """Return the critical-hit type determined from this roll's d20 result."""
+        d20 = self.roll.find_from_ast(find_d20(self.ast))
+        return determine_crit_type(self.roll, d20)
 
     @property
     def expr(self) -> str:
@@ -93,7 +98,6 @@ class Roller:
         if stringifier is None:
             stringifier = SimpleStringifier()
 
-        d20 = find_d20(node)
         context = RollContext(self._rng)
         warnings: list[str] = []
 
@@ -105,10 +109,7 @@ class Roller:
         if len(die) == 0:
             warnings.append("Expression did not contain any dice.")
 
-        # Determine crit type
-        crit = determine_crit_type(roll, roll.find_from_ast(d20))
-
-        results = [SingleRollResult(ast=node, roll=roll, stringifier=stringifier, crit=crit) for roll in rolls]
+        results = [SingleRollResult(ast=node, roll=roll, stringifier=stringifier) for roll in rolls]
         result = results[rolls.index(roll)]
 
         return RollResult(
