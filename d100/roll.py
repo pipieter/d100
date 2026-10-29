@@ -105,10 +105,12 @@ class Roller:
         if len(die) == 0:
             warnings.append("Expression did not contain any dice.")
 
-        # Determine crit type
-        crit = determine_crit_type(roll, roll.find_from_ast(d20))
-
-        results = [SingleRollResult(ast=node, roll=roll, stringifier=stringifier, crit=crit) for roll in rolls]
+        results = [
+            SingleRollResult(
+                ast=node, roll=roll, stringifier=stringifier, crit=determine_crit_type(roll, roll.find_from_ast(d20))
+            )
+            for roll in rolls
+        ]
         result = results[rolls.index(roll)]
 
         return RollResult(
